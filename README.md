@@ -18,11 +18,11 @@
     <img src="https://img.shields.io/badge/Telegram-Join-26A5E4?logo=telegram&logoColor=white" height="40">
   </a>
   
-👇YouTube channel: <a href="https://youtube.com/@starwindowsemulator?si=sHoTf-auUpccqR6s">
+👉YouTube channel: <a href="https://youtube.com/@starwindowsemulator?si=sHoTf-auUpccqR6s">
     <img src="https://img.shields.io/badge/YouTube-Subscribe-FF0000?logo=youtube&logoColor=white" height="40">
   </a>
   
-👇Instagram account: <a href="https://www.instagram.com/star_windows_emulator_official?igsh=ZDdyOXB2OWlqZHR3">
+👉Instagram account: <a href="https://www.instagram.com/star_windows_emulator_official?igsh=ZDdyOXB2OWlqZHR3">
     <img src="https://img.shields.io/badge/Instagram-Follow-E4405F?logo=instagram&logoColor=white" height="40">
   </a>
   
