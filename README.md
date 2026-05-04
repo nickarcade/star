@@ -8,7 +8,7 @@
 <h1 align="center"> star -
 Windows applications and games on Android.</h1>
 
-**star** is an application which uses Winlator for its base that lets you play PC games on Android with the best performance possible. It lets you access your Steam, Amazon, GOG and Epic Games library on the go.
+**star** is an application which it's base on Winlator that lets you play PC games on Android with the best performance possible. It lets you access your Steam, Amazon, GOG and Epic Games library on the go.
 
 # Our official social media
 
@@ -34,13 +34,17 @@ Windows applications and games on Android.</h1>
 
 # Game test on Star Emulator by EmuStar (official Star Emulator channel)
 
-### Test on Samsung Galaxy A12, MediaTek Helio P35, 6 GB RAM
+### Test on Samsung Galaxy A12, MediaTek Helio P35, 6 GB RAM (discontinued, 2 videos test only)
 
 [![Play on Youtube](https://i.ytimg.com/vi/Dqff2JvVwPM/hqdefault.jpg?sqp=-oaymwEXCOADEI4CSFryq4qpAwkIARUAAIhCGAE=&rs=AOn4CLBtMrTSAJgDEeQfqSl8_Eho5FCNRA)](https://youtube.com/playlist?list=PLQt8o_wwflSdb_EmPvAJWQIZv1CEaOcYG&si=H8eABMErSfD5uc2c)
 
-### Test on Honor Magic 5 Pro, Snapdragon 8 Gen 2, 12 GB RAM
+### Test on Honor Magic 5 Pro, Snapdragon 8 Gen 2, 12 GB RAM (active)
 
 [![Play on Youtube](https://i.ytimg.com/vi/DY_sMG9LSEY/hqdefault.jpg?sqp=-oaymwEXCOADEI4CSFryq4qpAwkIARUAAIhCGAE=&rs=AOn4CLD7T5eppf3aSo-pDzx2HSwDr68Rtw)](https://youtube.com/playlist?list=PLQt8o_wwflSdZZOfixLLi1woRM71QPTu1&si=FXbitAf-_fK16lAg)
+
+### Test on Redmi 13C 5G, MediaTek Dimensity 6100 Plus, 8 GB RAM (active)
+
+[![Play on Youtube](https://i.ytimg.com/vi/XC77qiV9JAs/hqdefault.jpg?sqp=-oaymwEXCOADEI4CSFryq4qpAwkIARUAAIhCGAE=&rs=AOn4CLAugcpnDowM36jEOjCvOozlJ5B9uw)](https://youtube.com/playlist?list=PLQt8o_wwflSfB6SmBgzu-ylatalWprEc6&si=h87CCitYpZSaoBnB)
 
 # Useful Tips
 
