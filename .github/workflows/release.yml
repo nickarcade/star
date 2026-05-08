@@ -136,11 +136,15 @@ jobs:
           git log -n 10 --pretty=format:"| \`%h\` | %s |"
         } > changelog.md
 
-        CHANGELOG_CONTENT="$(cat changelog.md)"
-        CHANGELOG_CONTENT="${CHANGELOG_CONTENT//'%'/'%25'}"
-        CHANGELOG_CONTENT="${CHANGELOG_CONTENT//$'\n'/'%0A'}"
-        CHANGELOG_CONTENT="${CHANGELOG_CONTENT//$'\r'/'%0D'}"
-        echo "CHANGELOG=$CHANGELOG_CONTENT" >> $GITHUB_ENV
+        # Multi-line value into $GITHUB_ENV requires heredoc syntax. The legacy
+        # %0A/%0D URL-encoding only worked with the deprecated set-output mechanism
+        # and would otherwise come through as literal "%0A" in the release body.
+        {
+          echo "CHANGELOG<<__CHANGELOG_EOF__"
+          cat changelog.md
+          echo ""
+          echo "__CHANGELOG_EOF__"
+        } >> "$GITHUB_ENV"
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
