@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Memory
@@ -40,6 +41,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.winlator.cmod.R
 import com.winlator.cmod.contents.AdrenotoolsManager
+import com.winlator.cmod.ui.screens.adrenodownload.AdrenoDriverDownloadSheet
 import com.winlator.cmod.ui.theme.Divider as DividerColor
 import com.winlator.cmod.ui.theme.OnSurface
 import com.winlator.cmod.ui.theme.OnSurfaceVariant
@@ -56,6 +58,7 @@ fun AdrenoToolsScreen() {
 
     var confirmInstallPrompt by remember { mutableStateOf(false) }
     var confirmRemoveIndex by remember { mutableStateOf<Int?>(null) }
+    var showDownloadSheet by remember { mutableStateOf(false) }
 
     // File picker for installing a GPU driver .zip
     val filePicker = rememberLauncherForActivityResult(
@@ -73,17 +76,30 @@ fun AdrenoToolsScreen() {
 
     Column(modifier = Modifier.fillMaxSize()) {
 
-        // Install button
-        Button(
-            onClick = { confirmInstallPrompt = true },
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+        // Top row: Install button + Download-online icon button
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 10.dp),
         ) {
-            Icon(Icons.Filled.FolderOpen, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.size(8.dp))
-            Text("Install GPU driver")
+            Button(
+                onClick = { confirmInstallPrompt = true },
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                modifier = Modifier.weight(1f),
+            ) {
+                Icon(Icons.Filled.FolderOpen, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.size(8.dp))
+                Text("Install GPU driver")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            IconButton(onClick = { showDownloadSheet = true }) {
+                Icon(
+                    imageVector = Icons.Filled.CloudDownload,
+                    contentDescription = "Download GPU drivers from online sources",
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
 
         Divider(color = DividerColor)
@@ -146,6 +162,17 @@ fun AdrenoToolsScreen() {
             },
             dismissButton = {
                 TextButton(onClick = { confirmRemoveIndex = null }) { Text("Cancel") }
+            },
+        )
+    }
+
+    if (showDownloadSheet) {
+        AdrenoDriverDownloadSheet(
+            onDismiss = { showDownloadSheet = false },
+            onDriverInstalled = { driverId ->
+                if (driverId.isNotEmpty() && driverId !in drivers) {
+                    drivers = drivers + driverId
+                }
             },
         )
     }
