@@ -5,20 +5,22 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudDownload
@@ -49,11 +51,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.winlator.cmod.contents.AdrenotoolsManager
-import com.winlator.cmod.ui.theme.Divider as DividerColor
-import com.winlator.cmod.ui.theme.OnSurface
-import com.winlator.cmod.ui.theme.OnSurfaceVariant
-import com.winlator.cmod.ui.theme.Surface
-import com.winlator.cmod.ui.theme.SurfaceVariant
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,6 +62,7 @@ fun AdrenoDriverDownloadSheet(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val cs = MaterialTheme.colorScheme
 
     val repo = remember { RemoteDriverRepository(context) }
     val sources = remember { DriverSources.ALL }
@@ -72,20 +70,21 @@ fun AdrenoDriverDownloadSheet(
     var selectedSourceIndex by remember { mutableStateOf(0) }
     var loading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var releases by remember { mutableStateOf<List<RemoteDriverRelease>>(emptyList()) }
+    var entries by remember { mutableStateOf<List<RemoteDriverEntry>>(emptyList()) }
 
-    var pendingAsset by remember { mutableStateOf<RemoteDriverAsset?>(null) }
+    var pendingEntry by remember { mutableStateOf<RemoteDriverEntry?>(null) }
     var downloading by remember { mutableStateOf(false) }
     var downloadProgress by remember { mutableStateOf(0) }
     var downloadStage by remember { mutableStateOf("") }
+    var refreshKey by remember { mutableStateOf(0) }
 
-    LaunchedEffect(selectedSourceIndex) {
+    LaunchedEffect(selectedSourceIndex, refreshKey) {
         loading = true
         errorMessage = null
-        releases = emptyList()
+        entries = emptyList()
         val source = sources[selectedSourceIndex]
-        repo.fetchReleases(source).fold(
-            onSuccess = { releases = it },
+        repo.fetchEntries(source).fold(
+            onSuccess = { entries = it },
             onFailure = { errorMessage = it.message ?: it::class.java.simpleName },
         )
         loading = false
@@ -94,8 +93,8 @@ fun AdrenoDriverDownloadSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Surface,
-        contentColor = OnSurface,
+        containerColor = cs.surface,
+        contentColor = cs.onSurface,
     ) {
         Column(
             modifier = Modifier
@@ -105,44 +104,48 @@ fun AdrenoDriverDownloadSheet(
             Text(
                 text = "Download GPU drivers",
                 style = MaterialTheme.typography.titleLarge,
-                color = OnSurface,
+                color = cs.onSurface,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp),
             )
 
-            // Source selector — segmented row
+            // Horizontally scrollable source chip row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 sources.forEachIndexed { index, source ->
                     SourceChip(
                         text = source.name,
                         selected = index == selectedSourceIndex,
                         onClick = { selectedSourceIndex = index },
-                        modifier = Modifier.weight(1f),
                     )
                 }
             }
 
             Spacer(Modifier.height(12.dp))
-            Divider(color = DividerColor)
+            Divider(color = cs.outline.copy(alpha = 0.4f))
 
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 when {
                     loading -> CenteredLoading()
                     errorMessage != null -> CenteredError(
                         message = errorMessage ?: "",
-                        onRetry = { selectedSourceIndex = selectedSourceIndex },
+                        onRetry = { refreshKey++ },
                     )
-                    releases.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("No releases found.", color = OnSurfaceVariant)
+                    entries.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            "No drivers found.",
+                            color = cs.onSurfaceVariant,
+                        )
                     }
                     else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(releases, key = { it.tagName + "_" + it.source }) { release ->
-                            ReleaseCard(release = release, onAssetClick = { pendingAsset = it })
-                            Divider(color = DividerColor)
+                        items(entries, key = { it.source + "_" + it.downloadUrl }) { entry ->
+                            EntryRow(entry = entry, onClick = { pendingEntry = entry })
+                            Divider(color = cs.outline.copy(alpha = 0.25f))
                         }
                     }
                 }
@@ -150,22 +153,25 @@ fun AdrenoDriverDownloadSheet(
         }
     }
 
-    // Confirm download dialog
-    pendingAsset?.let { asset ->
+    pendingEntry?.let { entry ->
         if (!downloading) {
             AlertDialog(
-                onDismissRequest = { pendingAsset = null },
+                onDismissRequest = { pendingEntry = null },
                 title = { Text("Download driver?") },
                 text = {
                     Column {
-                        Text(asset.name, style = MaterialTheme.typography.bodyMedium, color = OnSurface)
-                        Spacer(Modifier.height(4.dp))
-                        Text("Size: ${formatSize(asset.sizeBytes)}", style = MaterialTheme.typography.bodySmall, color = OnSurfaceVariant)
+                        Text(entry.displayName, style = MaterialTheme.typography.bodyMedium)
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Source: ${entry.source}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = cs.onSurfaceVariant,
+                        )
                         Spacer(Modifier.height(8.dp))
                         Text(
                             "The driver will be downloaded and installed automatically.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = OnSurfaceVariant,
+                            color = cs.onSurfaceVariant,
                         )
                     }
                 },
@@ -175,7 +181,7 @@ fun AdrenoDriverDownloadSheet(
                         downloadProgress = 0
                         downloadStage = "Downloading"
                         scope.launch {
-                            repo.downloadAsset(asset) { pct -> downloadProgress = pct }
+                            repo.downloadEntry(entry) { pct -> downloadProgress = pct }
                                 .fold(
                                     onSuccess = { file ->
                                         downloadStage = "Installing"
@@ -184,7 +190,7 @@ fun AdrenoDriverDownloadSheet(
                                         val driverId = manager.installDriver(Uri.fromFile(file))
                                         file.delete()
                                         downloading = false
-                                        pendingAsset = null
+                                        pendingEntry = null
                                         if (driverId.isNotEmpty()) {
                                             Toast.makeText(context, "Installed: $driverId", Toast.LENGTH_SHORT).show()
                                             onDriverInstalled(driverId)
@@ -198,7 +204,7 @@ fun AdrenoDriverDownloadSheet(
                                     },
                                     onFailure = { t ->
                                         downloading = false
-                                        pendingAsset = null
+                                        pendingEntry = null
                                         Toast.makeText(
                                             context,
                                             "Download failed: ${t.message ?: "unknown error"}",
@@ -210,7 +216,7 @@ fun AdrenoDriverDownloadSheet(
                     }) { Text("Download") }
                 },
                 dismissButton = {
-                    TextButton(onClick = { pendingAsset = null }) { Text("Cancel") }
+                    TextButton(onClick = { pendingEntry = null }) { Text("Cancel") }
                 },
             )
         } else {
@@ -219,7 +225,11 @@ fun AdrenoDriverDownloadSheet(
                 title = { Text(downloadStage) },
                 text = {
                     Column {
-                        Text(asset.name, style = MaterialTheme.typography.bodySmall, color = OnSurfaceVariant)
+                        Text(
+                            entry.displayName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = cs.onSurfaceVariant,
+                        )
                         Spacer(Modifier.height(12.dp))
                         if (downloadStage == "Downloading") {
                             LinearProgressIndicator(
@@ -227,7 +237,11 @@ fun AdrenoDriverDownloadSheet(
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             Spacer(Modifier.height(6.dp))
-                            Text("$downloadProgress%", style = MaterialTheme.typography.bodySmall, color = OnSurfaceVariant)
+                            Text(
+                                "$downloadProgress%",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = cs.onSurfaceVariant,
+                            )
                         } else {
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }
@@ -244,16 +258,16 @@ private fun SourceChip(
     text: String,
     selected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
-    val bg = if (selected) MaterialTheme.colorScheme.primary else SurfaceVariant
-    val fg = if (selected) MaterialTheme.colorScheme.onPrimary else OnSurface
+    val cs = MaterialTheme.colorScheme
+    val bg = if (selected) cs.primary else cs.surfaceVariant
+    val fg = if (selected) cs.onPrimary else cs.onSurface
     Box(
-        modifier = modifier
+        modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
             .background(bg)
             .clickable(onClick = onClick)
-            .padding(vertical = 8.dp, horizontal = 8.dp),
+            .padding(vertical = 8.dp, horizontal = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -266,56 +280,32 @@ private fun SourceChip(
 }
 
 @Composable
-private fun ReleaseCard(
-    release: RemoteDriverRelease,
-    onAssetClick: (RemoteDriverAsset) -> Unit,
-) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
-        Text(
-            text = release.displayName.ifBlank { release.tagName },
-            style = MaterialTheme.typography.bodyLarge,
-            color = OnSurface,
-            fontWeight = FontWeight.SemiBold,
-        )
-        if (release.publishedAt.isNotBlank()) {
-            Text(
-                text = release.publishedAt,
-                style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceVariant,
-            )
-        }
-        Spacer(Modifier.height(8.dp))
-        release.assets.forEach { asset ->
-            AssetRow(asset = asset, onClick = { onAssetClick(asset) })
-        }
-    }
-}
-
-@Composable
-private fun AssetRow(asset: RemoteDriverAsset, onClick: () -> Unit) {
+private fun EntryRow(entry: RemoteDriverEntry, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
-            .padding(vertical = 8.dp, horizontal = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         Icon(
             imageVector = Icons.Filled.Memory,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp),
+            tint = cs.primary,
+            modifier = Modifier.size(22.dp),
         )
-        Spacer(Modifier.width(10.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(asset.name, style = MaterialTheme.typography.bodyMedium, color = OnSurface)
-            Text(formatSize(asset.sizeBytes), style = MaterialTheme.typography.bodySmall, color = OnSurfaceVariant)
-        }
+        Spacer(Modifier.width(12.dp))
+        Text(
+            text = entry.displayName,
+            style = MaterialTheme.typography.bodyMedium,
+            color = cs.onSurface,
+            modifier = Modifier.weight(1f),
+        )
         Icon(
             imageVector = Icons.Filled.CloudDownload,
             contentDescription = "Download",
-            tint = MaterialTheme.colorScheme.primary,
+            tint = cs.primary,
             modifier = Modifier.size(22.dp),
         )
     }
@@ -323,24 +313,46 @@ private fun AssetRow(asset: RemoteDriverAsset, onClick: () -> Unit) {
 
 @Composable
 private fun CenteredLoading() {
+    val cs = MaterialTheme.colorScheme
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             CircularProgressIndicator()
             Spacer(Modifier.height(8.dp))
-            Text("Loading releases…", color = OnSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            Text(
+                "Loading drivers…",
+                color = cs.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
     }
 }
 
 @Composable
 private fun CenteredError(message: String, onRetry: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
-            Icon(Icons.Filled.ErrorOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(36.dp))
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(24.dp),
+        ) {
+            Icon(
+                Icons.Filled.ErrorOutline,
+                contentDescription = null,
+                tint = cs.error,
+                modifier = Modifier.size(36.dp),
+            )
             Spacer(Modifier.height(8.dp))
-            Text("Could not load releases", color = OnSurface, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                "Could not load drivers",
+                color = cs.onSurface,
+                style = MaterialTheme.typography.bodyMedium,
+            )
             Spacer(Modifier.height(4.dp))
-            Text(message, color = OnSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            Text(
+                message,
+                color = cs.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+            )
             Spacer(Modifier.height(12.dp))
             TextButton(onClick = onRetry) { Text("Retry") }
         }

@@ -5,7 +5,6 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
-import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
@@ -17,56 +16,43 @@ class RemoteDriverRepository(private val context: Context) {
         File(context.cacheDir, "adreno_driver_dl").apply { if (!exists()) mkdirs() }
     }
 
-    suspend fun fetchReleases(source: RemoteDriverSource): Result<List<RemoteDriverRelease>> =
+    suspend fun fetchEntries(source: RemoteDriverSource): Result<List<RemoteDriverEntry>> =
         withContext(Dispatchers.IO) {
             try {
-                val body = httpGetText(source.releasesApiUrl)
+                val body = httpGetText(source.jsonUrl)
                 val arr = JSONArray(body)
-                val out = ArrayList<RemoteDriverRelease>(arr.length())
+                val out = ArrayList<RemoteDriverEntry>(arr.length())
                 for (i in 0 until arr.length()) {
                     val o = arr.getJSONObject(i)
-                    val assetsJson = o.optJSONArray("assets") ?: JSONArray()
-                    val assets = ArrayList<RemoteDriverAsset>(assetsJson.length())
-                    for (j in 0 until assetsJson.length()) {
-                        val a = assetsJson.getJSONObject(j)
-                        val name = a.optString("name", "")
-                        if (!name.endsWith(".zip", ignoreCase = true)) continue
-                        assets.add(
-                            RemoteDriverAsset(
-                                name = name,
-                                downloadUrl = a.optString("browser_download_url", ""),
-                                sizeBytes = a.optLong("size", 0L),
-                            )
-                        )
+                    val url = o.optString("remoteUrl", "")
+                    if (!url.endsWith(".zip", ignoreCase = true)) continue
+                    val verName = o.optString("verName", "").ifBlank {
+                        url.substringAfterLast('/').removeSuffix(".zip")
                     }
-                    if (assets.isEmpty()) continue
                     out.add(
-                        RemoteDriverRelease(
+                        RemoteDriverEntry(
                             source = source.name,
-                            tagName = o.optString("tag_name", ""),
-                            displayName = o.optString("name", "").ifBlank { o.optString("tag_name", "") },
-                            publishedAt = o.optString("published_at", "").take(10),
-                            notes = o.optString("body", "").takeIf { it.isNotBlank() },
-                            assets = assets,
+                            displayName = verName,
+                            downloadUrl = url,
                         )
                     )
                 }
                 Result.success(out)
             } catch (t: Throwable) {
-                Log.w(TAG, "fetchReleases failed for ${source.name}", t)
+                Log.w(TAG, "fetchEntries failed for ${source.name}", t)
                 Result.failure(t)
             }
         }
 
-    /** Downloads to internal cache. Returns the local file. Calls progress(0..100). */
-    suspend fun downloadAsset(
-        asset: RemoteDriverAsset,
+    /** Downloads the .zip to internal cache. Returns the local file. progress(0..100). */
+    suspend fun downloadEntry(
+        entry: RemoteDriverEntry,
         progress: (Int) -> Unit,
     ): Result<File> = withContext(Dispatchers.IO) {
         try {
-            val safeName = asset.name.replace(Regex("[^A-Za-z0-9._-]"), "_")
+            val safeName = entry.displayName.replace(Regex("[^A-Za-z0-9._-]"), "_") + ".zip"
             val outFile = File(cacheDir, "${System.currentTimeMillis()}_$safeName")
-            val conn = (URL(asset.downloadUrl).openConnection() as HttpURLConnection).apply {
+            val conn = (URL(entry.downloadUrl).openConnection() as HttpURLConnection).apply {
                 connectTimeout = 15_000
                 readTimeout = 30_000
                 setRequestProperty("User-Agent", "star-android")
@@ -76,7 +62,7 @@ class RemoteDriverRepository(private val context: Context) {
                 if (conn.responseCode !in 200..299) {
                     return@withContext Result.failure(RuntimeException("HTTP ${conn.responseCode}"))
                 }
-                val totalBytes = if (asset.sizeBytes > 0) asset.sizeBytes else conn.contentLengthLong
+                val totalBytes = conn.contentLengthLong
                 conn.inputStream.use { input ->
                     FileOutputStream(outFile).use { output ->
                         val buf = ByteArray(64 * 1024)
@@ -103,7 +89,7 @@ class RemoteDriverRepository(private val context: Context) {
                 conn.disconnect()
             }
         } catch (t: Throwable) {
-            Log.w(TAG, "downloadAsset failed for ${asset.name}", t)
+            Log.w(TAG, "downloadEntry failed for ${entry.displayName}", t)
             Result.failure(t)
         }
     }
@@ -117,7 +103,6 @@ class RemoteDriverRepository(private val context: Context) {
             connectTimeout = 15_000
             readTimeout = 30_000
             setRequestProperty("User-Agent", "star-android")
-            setRequestProperty("Accept", "application/vnd.github+json")
             instanceFollowRedirects = true
         }
         try {

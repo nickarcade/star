@@ -42,16 +42,13 @@ import androidx.compose.ui.unit.dp
 import com.winlator.cmod.R
 import com.winlator.cmod.contents.AdrenotoolsManager
 import com.winlator.cmod.ui.screens.adrenodownload.AdrenoDriverDownloadSheet
-import com.winlator.cmod.ui.theme.Divider as DividerColor
-import com.winlator.cmod.ui.theme.OnSurface
-import com.winlator.cmod.ui.theme.OnSurfaceVariant
-import com.winlator.cmod.ui.theme.Surface
 
 @Composable
 fun AdrenoToolsScreen() {
     val context = LocalContext.current
     val activity = context as Activity
     val manager = remember { AdrenotoolsManager(activity) }
+    val cs = MaterialTheme.colorScheme
 
     // Mutable list drives the UI
     var drivers by remember { mutableStateOf(manager.enumarateInstalledDrivers().toList()) }
@@ -74,7 +71,11 @@ fun AdrenoToolsScreen() {
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(cs.surface)
+    ) {
 
         // Top row: Install button + Download-online icon button
         Row(
@@ -85,7 +86,7 @@ fun AdrenoToolsScreen() {
         ) {
             Button(
                 onClick = { confirmInstallPrompt = true },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                colors = ButtonDefaults.buttonColors(containerColor = cs.primary),
                 modifier = Modifier.weight(1f),
             ) {
                 Icon(Icons.Filled.FolderOpen, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -97,16 +98,16 @@ fun AdrenoToolsScreen() {
                 Icon(
                     imageVector = Icons.Filled.CloudDownload,
                     contentDescription = "Download GPU drivers from online sources",
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = cs.primary,
                 )
             }
         }
 
-        Divider(color = DividerColor)
+        Divider(color = cs.outline.copy(alpha = 0.4f))
 
         if (drivers.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No GPU drivers installed.", color = OnSurfaceVariant)
+                Text("No GPU drivers installed.", color = cs.onSurfaceVariant)
             }
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -116,7 +117,7 @@ fun AdrenoToolsScreen() {
                         version = manager.getDriverVersion(driverId),
                         onRemove = { confirmRemoveIndex = index },
                     )
-                    Divider(color = DividerColor)
+                    Divider(color = cs.outline.copy(alpha = 0.25f))
                 }
             }
         }
@@ -184,26 +185,27 @@ private fun DriverItem(
     version: String,
     onRemove: () -> Unit,
 ) {
+    val cs = MaterialTheme.colorScheme
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .background(Surface)
+            .background(cs.surface)
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         Icon(
             imageVector = Icons.Filled.Memory,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = cs.primary,
             modifier = Modifier.size(36.dp),
         )
         Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = name, style = MaterialTheme.typography.bodyLarge, color = OnSurface)
-            Text(text = version, style = MaterialTheme.typography.bodySmall, color = OnSurfaceVariant)
+            Text(text = name, style = MaterialTheme.typography.bodyLarge, color = cs.onSurface)
+            Text(text = version, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
         }
         IconButton(onClick = onRemove) {
-            Icon(Icons.Filled.Delete, contentDescription = "Remove", tint = OnSurfaceVariant)
+            Icon(Icons.Filled.Delete, contentDescription = "Remove", tint = cs.onSurfaceVariant)
         }
     }
 }
