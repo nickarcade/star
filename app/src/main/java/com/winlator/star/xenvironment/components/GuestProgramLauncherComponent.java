@@ -27,6 +27,7 @@ import com.winlator.star.core.WineInfo;
 import com.winlator.star.fexcore.FEXCoreManager;
 import com.winlator.star.fexcore.FEXCorePreset;
 import com.winlator.star.fexcore.FEXCorePresetManager;
+import com.winlator.star.lsfg.LsfgManager;
 import com.winlator.star.xconnector.UnixSocketConfig;
 import com.winlator.star.xenvironment.EnvironmentComponent;
 import com.winlator.star.xenvironment.ImageFs;
@@ -381,6 +382,10 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
         // LSFG (Lossless Scaling Frame Generation) — if enabled
         {
             boolean lsfgEnabled = container.isLsfgEnabled();
+            // Ensure the LSFG Vulkan layer files are installed
+            if (lsfgEnabled) {
+                LsfgManager.ensureLayerInstalled(context, rootDir);
+            }
             if (shortcut != null) {
                 String lsfgExtra = shortcut.getExtra("lsfgEnabled", "");
                 if (!lsfgExtra.isEmpty()) lsfgEnabled = lsfgExtra.equals("1");
@@ -389,6 +394,11 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
                 String lsfgDir = rootDir.getPath() + "/usr/share/vulkan/implicit_layer.d/lsfg";
                 String vkLayerPath = envVars.get("VK_LAYER_PATH");
                 envVars.put("VK_LAYER_PATH", lsfgDir + (vkLayerPath.isEmpty() ? "" : ":" + vkLayerPath));
+                // Also add the parent layer dir so the Vulkan loader finds the manifest
+                String parentLayerDir = rootDir.getPath() + "/usr/share/vulkan/implicit_layer.d";
+                if (!vkLayerPath.contains(parentLayerDir)) {
+                    envVars.put("VK_LAYER_PATH", parentLayerDir + ":" + envVars.get("VK_LAYER_PATH"));
+                }
                 String ldLibPath = envVars.get("LD_LIBRARY_PATH");
                 envVars.put("LD_LIBRARY_PATH", lsfgDir + (ldLibPath.isEmpty() ? "" : ":" + ldLibPath));
                 envVars.put("LSFG_MULTIPLIER", String.valueOf(container.getLsfgMultiplier()));
