@@ -35,6 +35,9 @@ ABI="arm64-v8a"
 API_LEVEL="26"
 TOOLCHAIN="${NDK}/toolchains/llvm/prebuilt/linux-x86_64"
 CMAKE="${TOOLCHAIN}/bin/cmake"
+if [ ! -f "$CMAKE" ]; then
+    CMAKE="cmake"
+fi
 NINJA="${TOOLCHAIN}/bin/ninja"
 
 if [[ "$CLEAN" == true ]]; then
