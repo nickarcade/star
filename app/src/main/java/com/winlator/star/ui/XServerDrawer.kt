@@ -189,14 +189,119 @@ fun XServerDrawer() {
             onClick = { state.onGraphicEngine?.run(); state.onClose?.run() },
         )
 
-        // ── LSFG (Lossless Scaling Frame Gen) ──────────────────────────────────
-        DrawerCheckItem(
-            label = "Lossless Scaling FG",
-            checked = lsfgEnabled,
-            onClick = { state.onLsfgToggle?.run(); state.onClose?.run() },
-        )
+                // ── LSFG (Lossless Scaling Frame Gen) ─────────────────────────────────
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { state.onLsfgToggle?.run() }
+                .padding(start = 20.dp, end = 20.dp, top = 11.dp, bottom = 11.dp),
+        ) {
+            Text(
+                text = "Lossless Scaling FG",
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (lsfgEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
+            )
+            Switch(
+                checked = lsfgEnabled,
+                onCheckedChange = { state.onLsfgToggle?.run() },
+            )
+        }
 
-        // ── Vibration ─────────────────────────────────────────────────────────
+        AnimatedVisibility(
+            visible = lsfgEnabled,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut(),
+        ) {
+            Column(
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                // Multiplier
+                LsfgDropdown(
+                    label = "Multiplier",
+                    options = listOf("2x", "3x", "4x", "5x", "6x", "7x", "8x", "9x", "10x"),
+                    selectedOption = "${state.getLsfgMultiplier()}x",
+                    onSelect = { opt ->
+                        val num = opt.removeSuffix("x").toIntOrNull() ?: 2
+                        state.setLsfgMultiplier(num)
+                        state.onApplyLsfg?.run()
+                    },
+                )
+
+                // Quality
+                val qualityOptions = listOf("performance", "balanced", "quality")
+                LsfgDropdown(
+                    label = "Quality",
+                    options = qualityOptions,
+                    selectedOption = state.getLsfgQuality(),
+                    onSelect = { opt ->
+                        state.setLsfgQuality(opt)
+                        state.onApplyLsfg?.run()
+                    },
+                )
+
+                // Flow Scale
+                Text(
+                    "Flow Scale: ${state.getLsfgFlowScale()}%",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    "Controls the density of motion vectors. Higher values capture more detail but may increase artifacts.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                )
+                Slider(
+                    value = state.getLsfgFlowScale().toFloat(),
+                    onValueChange = { state.setLsfgFlowScale(it.toInt()) },
+                    onValueChangeFinished = { state.onApplyLsfg?.run() },
+                    valueRange = 50f..200f,
+                    steps = 14,
+                )
+
+                // Max Latency
+                Text(
+                    "Max Input Latency: ${state.getLsfgMaxLatency()}ms",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    "Maximum number of frames the system can hold for processing. Lower values reduce input lag.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                )
+                Slider(
+                    value = state.getLsfgMaxLatency().toFloat(),
+                    onValueChange = { state.setLsfgMaxLatency(it.toInt()) },
+                    onValueChangeFinished = { state.onApplyLsfg?.run() },
+                    valueRange = 0f..33f,
+                    steps = 32,
+                )
+
+                // GPU Architecture
+                LsfgDropdown(
+                    label = "GPU Architecture",
+                    options = listOf("auto", "mali", "adreno"),
+                    selectedOption = state.getLsfgGpuArch(),
+                    onSelect = { opt ->
+                        state.setLsfgGpuArch(opt)
+                        state.onApplyLsfg?.run()
+                    },
+                )
+
+                // Reset to Defaults button
+                Button(
+                    onClick = { state.onResetLsfg?.run() },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Reset to GPU Defaults")
+                }
+            }
+        }
+
+// ── Vibration ─────────────────────────────────────────────────────────
         DrawerMenuItem(
             iconRes = R.drawable.icon_input_controls,
             label = "Vibration",
