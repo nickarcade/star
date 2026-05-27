@@ -463,7 +463,3 @@ fun LsfgDropdown(
                 )
             }
         }
-    }
-}
-    }
-}
