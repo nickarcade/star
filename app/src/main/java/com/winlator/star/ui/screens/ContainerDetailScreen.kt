@@ -119,7 +119,6 @@ fun ContainerDetailScreen(
                 onShowDxvkConfig = { showDxvkConfig = true },
                 onShowWineD3DConfig = { showWineD3DConfig = true },
                 onShowFpsConfig = { showFpsConfig = true },
-                onShowLsfgConfig = { showLsfgConfig = true }
             )
 
             // ── Tabs ───────────────────────────────────────────────────────────
