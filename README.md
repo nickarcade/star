@@ -2,7 +2,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/downloads/jacojayy/star/total" alt="Total Downloads" width="150">
+  <img src="https://img.shields.io/github/downloads/star-emu/star/total" alt="Total Downloads" width="150">
 </p>
 
 <h1 align="center"> star -
@@ -10,10 +10,14 @@ Windows applications and games on Android.</h1>
 
 **star** is an application that lets you play PC games on Android with the best performance possible. It lets you access your Steam, Amazon, GOG and Epic Games library on the go.
 
-- **Package:** `com.winlator.star`
+**Informations:**
+- **Package:** `com.winlator.star` (standard), `com.tencent.ig` (pubg), `com.ludashi.benchmark` (ludashi)
+
 - **Version:** `v1.2-REVAMPED` (build identifier `7.1.4x-cmod`, versionCode `20`)
+
 - **Android SDK:** `compileSdk 34`, `targetSdk 28`, `minSdk 26` (Android 8.0+)
-- **Upstream lineage:** Winlator → cmod → Bionic Nightly → Star → Star Bionic (Compose)
+
+- **Upstream lineage:** Winlator → cmod → Bionic Nightly → star Bionic**
 
 ---
 
@@ -65,12 +69,12 @@ The Wine/translation stack this app bundles or downloads:
 - **Turnip / Mesa** — [Freedreno team @ Mesa](https://gitlab.freedesktop.org/mesa/mesa)
 - **Proton layers (bionic)** — [GameNative](https://github.com/utkarshdalal/GameNative)
 
-Credits surfaced in the **Star Bionic REVAMPED** release (`star.bionic-revamp`):
+Credits surfaced in the **star Bionic REVAMPED** project (`star.bionic-revamp`):
 
 - **@The412Banner** — Converting the UI to Jetpack Compose and rewriting the controller implementation.
-- **@jacojayy** — SDK36 patches in Turnip.
+- **@jacojayy** — Timeline Semaphore patches in Turnip.
 
-If you have contributed and are not listed, open an issue or PR — this list is intended to be complete.
+If you have contributed and are not listed, open a PR — this list is intended to be complete.
 
 ---
 
