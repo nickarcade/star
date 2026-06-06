@@ -1,4 +1,4 @@
-name: Nightly CI Release Build (different pkg)
+name: Development CI Build (dev preview)
 
 on:
   workflow_dispatch:
