@@ -84,7 +84,7 @@ private val allTabs = listOf(
     TabData(TabType.EXIT, R.drawable.icon_exit),
 )
 
-private data class ContentTab(val type: TabType)
+private val contentTabs = setOf(TabType.GRAPHICS, TabType.HUD, TabType.CONTROLS, TabType.TASK_MANAGER)
 private val contentTabs = setOf(TabType.GRAPHICS, TabType.HUD, TabType.CONTROLS, TabType.TASK_MANAGER)
 
 fun setupComposeView(view: ComposeView) {
