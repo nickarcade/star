@@ -392,8 +392,22 @@ private fun GraphicsContent(state: XServerDrawerState) {
 
     SectionHeader("Graphics")
 
-    ToggleRow("Fullscreen", true) {
-        state.onToggleFullscreen?.run(); state.onClose?.run()
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(DarkSurface)
+            .clickable { state.onToggleFullscreen?.run(); state.onClose?.run() }
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+    ) {
+        Text("Toggle Fullscreen", color = DimWhite, modifier = Modifier.weight(1f))
+        Icon(
+            painter = painterResource(R.drawable.icon_fullscreen),
+            contentDescription = null,
+            tint = Primary,
+            modifier = Modifier.size(20.dp)
+        )
     }
 
     Spacer(Modifier.height(4.dp))

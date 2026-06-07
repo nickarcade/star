@@ -395,7 +395,6 @@ public class XServerDisplayActivity extends AppCompatActivity {
         state.onActiveWindows          = () -> showActiveWindowsDialog();
         state.onTaskManager            = () -> {
             XServerDrawerState.INSTANCE.selectTab(com.winlator.star.ui.TabType.TASK_MANAGER);
-            setupTmCallbacks();
             XServerDialogState.INSTANCE.setTmProcesses(new ArrayList<>());
         };
         state.onMagnifier              = () -> showMagnifierOverlay();
