@@ -365,7 +365,7 @@ private fun LabeledSlider(
 // ───── Modern Accent Button ─────
 
 @Composable
-private fun AccentButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun AccentButton(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         modifier = modifier.fillMaxWidth().height(42.dp),
