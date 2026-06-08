@@ -587,8 +587,7 @@ public class XServerDisplayActivity extends AppCompatActivity {
             Log.d("XServerDisplayActivity", "XInput Disabled from Shortcut: " + xinputDisabledFromShortcut);
         }
 
-        // "Vegas+VKD3D" is a cosmetic alias of DXVK (Vegas backend not ready yet); run it as DXVK.
-        if (dxwrapper != null && dxwrapper.contains("vegas")) dxwrapper = dxwrapper.replace("vegas", "dxvk");
+        // VEGAS runs its own native DLLs from vegas-<ver>.tzst — no alias to DXVK.
 
         this.graphicsDriverConfig = GraphicsDriverConfigDialog.parseGraphicsDriverConfig(graphicsDriverConfig);
         this.dxwrapperConfig = DXVKConfigDialog.parseConfig(dxwrapperConfig);
@@ -1065,6 +1064,13 @@ public class XServerDisplayActivity extends AppCompatActivity {
             String vkd3dWrapper = "vkd3d-" + dxwrapperConfig.get("vkd3dVersion");
             String ddrawrapper = dxwrapperConfig.get("ddrawrapper");
             dxwrapper = dxvkWrapper + ";" + vkd3dWrapper + ";" + ddrawrapper;
+        }
+        else if (dxwrapper.contains("vegas")) {
+            String vegasVersion = dxwrapperConfig.get("version");
+            if (vegasVersion == null || vegasVersion.isEmpty())
+                vegasVersion = DefaultVersion.getVegasDefault();
+            String ddrawrapper = dxwrapperConfig.get("ddrawrapper");
+            dxwrapper = "vegas-" + vegasVersion + ";;" + ddrawrapper;
         }
 
         if (!dxwrapper.equals(container.getExtra("dxwrapper"))) {
@@ -1781,6 +1787,9 @@ public class XServerDisplayActivity extends AppCompatActivity {
             envVars.put("WRAPPER_NO_PATCH_OPCONSTCOMP", "1");
         }
     }
+    else if (dxwrapper.contains("vegas")) {
+        DXVKConfigDialog.setEnvVars(this, dxwrapperConfig, envVars);
+    }
     else {
         WineD3DConfigDialog.setEnvVars(this, dxwrapperConfig, envVars);
     }
@@ -2011,6 +2020,67 @@ else {
 
 Log.d(TAG, "Finished extraction of DXVK wrapper files, version: " + dxwrapper);
 return true;
+} else if (dxwrapper.contains("vegas")) {
+    Log.d(TAG, "Extracting VEGAS wrapper files: " + dxwrapper);
+
+    String vegasWrapper = dxwrapper.split(";")[0];
+    String ddrawrapper = dxwrapper.split(";")[2];
+
+    // Extract vegas DLL archive
+    // vegas WCPs use CONTENT_TYPE_VEGAS, verName like "vegas-2.7.3"
+    // getProfileByEntryName("vegas-2.7.3") can't resolve because the installed
+    // profile has verName="vegas-2.7.3" and verCode≥1, so we search manually.
+    ContentProfile vegasProfile = contentsManager.getProfileByEntryName(vegasWrapper);
+    if (vegasProfile == null) {
+        String needVersion = vegasWrapper.substring("vegas-".length());
+        Log.d(TAG, "Searching VEGAS profiles for version: " + needVersion);
+        for (ContentProfile p : contentsManager.getProfiles(ContentProfile.ContentType.CONTENT_TYPE_VEGAS)) {
+            String pVer = (p.verName != null && p.verName.startsWith("vegas-"))
+                    ? p.verName.substring("vegas-".length()) : p.verName;
+            if (needVersion.equals(pVer)) {
+                vegasProfile = p;
+                Log.d(TAG, "Found matching VEGAS content profile: " + ContentsManager.getEntryName(p));
+                break;
+            }
+        }
+    }
+    if (vegasProfile != null) {
+        Log.d(TAG, "Applying user-defined VEGAS content profile: " + vegasWrapper);
+        contentsManager.applyContent(vegasProfile);
+    } else {
+        Log.d(TAG, "Extracting fallback VEGAS .tzst archive: " + vegasWrapper);
+        TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "dxwrapper/" + vegasWrapper + ".tzst", windowsDir, onExtractFileListener);
+    }
+
+    // Restore original d3d12 (vegas does not include VKD3D)
+    restoreOriginalDllFiles(new String[]{"d3d12.dll", "d3d12core.dll"});
+
+    // Extract nglide
+    Log.d(TAG, "Extracting nglide wrapper");
+    TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "ddrawrapper/nglide.tzst", windowsDir, onExtractFileListener);
+
+    // Handle ddrawrapper
+    if (ddrawrapper.contains("None")) {
+        Log.d(TAG, "No DDraw wrapper selected, restoring original ddraw files");
+        restoreOriginalDllFiles(new String[]{ "ddraw.dll", "d3dimm.dll" });
+    }
+    else {
+        if (ddrawrapper.equals("cnc-ddraw")) {
+            envVars.put("CNC_DDRAW_CONFIG_FILE", "C:\\windows\\syswow64\\ddraw.ini");
+        }
+        else if (ddrawrapper.equals("dgvoodoo")) {
+            Log.d(TAG, "Applying dgvoodoo ddrawrapper");
+            TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "ddrawrapper/dgvoodoo.tzst", windowsDir, onExtractFileListener);
+        }
+
+        Log.d(TAG, "Extracting ddrawrapper " + ddrawrapper);
+        if (!ddrawrapper.equals("dgvoodoo")) {
+            TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "ddrawrapper/" + ddrawrapper + ".tzst", windowsDir, onExtractFileListener);
+        }
+    }
+
+    Log.d(TAG, "Finished extraction of VEGAS wrapper files: " + dxwrapper);
+    return true;
 } else if (dxwrapper.contains("wined3d")) {
     Log.d(TAG, "Restoring original DLL files for wined3d.");
     restoreOriginalDllFiles(dlls);

@@ -71,6 +71,7 @@ fun ContainerDetailScreen(
     var showBox64DownloadSheet   by remember { mutableStateOf(false) }
     var showFexCoreDownloadSheet by remember { mutableStateOf(false) }
     var showDxvkDownloadSheet    by remember { mutableStateOf(false) }
+    var showVegasDownloadSheet   by remember { mutableStateOf(false) }
     var showVkd3dDownloadSheet   by remember { mutableStateOf(false) }
 
     // AndroidView references for custom views
@@ -174,14 +175,17 @@ fun ContainerDetailScreen(
             onDismiss = { showGraphicsDriverConfig = false }
         )
     }
+    val isVegasWrapper by remember {
+        mutableStateOf(StringUtils.parseIdentifier(viewModel.selectedDXWrapper ?: "").contains("vegas"))
+    }
     if (showDxvkConfig) {
         DxvkConfigDialog(
             isArm64EC = viewModel.isArm64EC,
-            isVegas = StringUtils.parseIdentifier(viewModel.selectedDXWrapper ?: "").contains("vegas"),
+            isVegas = isVegasWrapper,
             initialConfig = viewModel.dxWrapperConfig,
             onConfirm = { newConfig -> viewModel.dxWrapperConfig = newConfig; showDxvkConfig = false },
             onDismiss = { showDxvkConfig = false },
-            onDownloadDxvk = { showDxvkDownloadSheet = true },
+            onDownloadDxvk = { if (isVegasWrapper) showVegasDownloadSheet = true else showDxvkDownloadSheet = true },
             onDownloadVkd3d = { showVkd3dDownloadSheet = true }
         )
     }
@@ -236,6 +240,12 @@ fun ContainerDetailScreen(
         ContentDownloadSheet(
             contentType = com.winlator.star.contents.ContentProfile.ContentType.CONTENT_TYPE_VKD3D,
             onDismiss = { showVkd3dDownloadSheet = false },
+            onContentChanged = {}
+        )
+    }
+    if (showVegasDownloadSheet) {
+        VegasDownloadSheet(
+            onDismiss = { showVegasDownloadSheet = false },
             onContentChanged = {}
         )
     }
@@ -1282,16 +1292,22 @@ internal fun DxvkConfigDialog(
 
     val allDxvkVersions = remember { mutableStateOf(listOf<String>()) }
     val vkd3dVersions   = remember { mutableStateOf(listOf<String>()) }
+    val configSourceEntries = remember { mutableStateOf(listOf<String>()) }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             val cm = ContentsManager(context)
             cm.syncContents()
-            val dxvk = DXVKConfigDialog.loadDxvkVersionList(context, cm, isArm64EC)
+            val versions = if (isVegas)
+                DXVKConfigDialog.loadVegasVersionList(context, cm)
+            else
+                DXVKConfigDialog.loadDxvkVersionList(context, cm, isArm64EC)
             val vkd3d = DXVKConfigDialog.loadVkd3dVersionList(context, cm)
+            val cfgsrc = DXVKConfigDialog.loadVegasConfigSourceList(context)
             withContext(Dispatchers.Main) {
-                allDxvkVersions.value = dxvk
+                allDxvkVersions.value = versions
                 vkd3dVersions.value = vkd3d
+                configSourceEntries.value = cfgsrc
             }
         }
     }
@@ -1325,12 +1341,16 @@ internal fun DxvkConfigDialog(
     }
     var selectedFeatureLevel by remember { mutableStateOf(featureLevelEntries.firstOrNull { it == config.get("vkd3dLevel") } ?: featureLevelEntries.first()) }
     var selectedDdra         by remember { mutableStateOf(ddraEntries.firstOrNull { StringUtils.parseIdentifier(it) == config.get("ddrawrapper") } ?: ddraEntries.first()) }
+    var selectedConfigSource by remember(configSourceEntries.value) {
+        val stored = config.get("dxvkConfigFile")
+        mutableStateOf(configSourceEntries.value.firstOrNull { it == stored } ?: configSourceEntries.value.firstOrNull() ?: "None")
+    }
     var asyncEnabled         by remember { mutableStateOf(config.get("async") == "1") }
     var asyncCacheEnabled    by remember { mutableStateOf(config.get("asyncCache") == "1") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("DXVK ${stringResource(R.string.configuration)}") },
+        title = { Text(if (isVegas) "VEGAS ${stringResource(R.string.configuration)}" else "DXVK ${stringResource(R.string.configuration)}") },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState()).fillMaxWidth()) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -1386,6 +1406,10 @@ internal fun DxvkConfigDialog(
                 LabeledDropdown("VKD3D Feature Level", featureLevelEntries, selectedFeatureLevel, { selectedFeatureLevel = it })
                 Spacer(Modifier.height(8.dp))
                 LabeledDropdown("DDraw Wrapper", ddraEntries, selectedDdra, { selectedDdra = it })
+                if (isVegas) {
+                    Spacer(Modifier.height(8.dp))
+                    LabeledDropdown("Config Source", configSourceEntries.value, selectedConfigSource, { selectedConfigSource = it })
+                }
             }
         },
         confirmButton = {
@@ -1398,6 +1422,7 @@ internal fun DxvkConfigDialog(
                 cfg.put("vkd3dVersion", selectedVkd3d)
                 cfg.put("vkd3dLevel", selectedFeatureLevel)
                 cfg.put("ddrawrapper", StringUtils.parseIdentifier(selectedDdra))
+                cfg.put("dxvkConfigFile", if (selectedConfigSource == "None") "" else selectedConfigSource)
                 onConfirm(cfg.toString())
             }) { Text(stringResource(android.R.string.ok)) }
         },

@@ -27,6 +27,15 @@ public abstract class DefaultVersion {
         return dxvkDefault;
     }
 
+    private static String vegasDefault = null;
+
+    public static String getVegasDefault() {
+        if (vegasDefault == null) {
+            vegasDefault = "2.7.3";
+        }
+        return vegasDefault;
+    }
+
     public static final String D8VK = "1.0";
     public static final String VKD3D = "None";
 }

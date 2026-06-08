@@ -184,6 +184,7 @@
     <string name="dxwrapper_help_content"><![CDATA[
         <i><b>WineD3D</b></i> is a translation layer for DirectX 1-11 to OpenGL.<br /><br />
         <i><b>DXVK</b></i> is a translation layer for Direct3D 9-11 to Vulkan.<br /><br />
+        <i><b>VEGAS</b></i> is a performance-tuned fork of DXVK with game-specific optimizations for Android/Adreno devices.<br /><br />
         <i><b>VKD3D</b></i> is a translation layer for Direct3D 12 API to Vulkan.<br /><br />
         <i><b>CNC DDraw</b></i> is an implementation of DirectDraw for better compatibility with classic games.
     ]]></string>
