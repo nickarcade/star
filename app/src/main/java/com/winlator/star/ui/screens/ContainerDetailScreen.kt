@@ -1312,18 +1312,9 @@ internal fun DxvkConfigDialog(
 
     var selectedVkd3d by remember { mutableStateOf(config.get("vkd3dVersion").ifEmpty { "None" }) }
 
-    val filteredDxvk = remember(selectedVkd3d, allDxvkVersions.value) {
-        if (selectedVkd3d != "None") {
-            allDxvkVersions.value.filter { v ->
-                val major = DXVKConfigDialog.tryGetMajor(v)
-                major == null || major >= 2
-            }
-        } else allDxvkVersions.value
-    }
-
-    var selectedDxvk by remember(filteredDxvk) {
+    var selectedDxvk by remember(allDxvkVersions.value) {
         val stored = config.get("version")
-        mutableStateOf(filteredDxvk.firstOrNull { it == stored } ?: filteredDxvk.firstOrNull() ?: stored)
+        mutableStateOf(allDxvkVersions.value.firstOrNull { it == stored } ?: allDxvkVersions.value.firstOrNull() ?: stored)
     }
 
     val dxvkType = remember(selectedDxvk) { DXVKConfigDialog.getDXVKType(selectedDxvk) }
@@ -1370,7 +1361,7 @@ internal fun DxvkConfigDialog(
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     LabeledDropdown(
                         if (isVegas) "Vegas Selector" else stringResource(R.string.dxvk_version),
-                        filteredDxvk, selectedDxvk, { selectedDxvk = it },
+                        allDxvkVersions.value, selectedDxvk, { selectedDxvk = it },
                         modifier = Modifier.weight(1f)
                     )
                     OutlinedButton(
