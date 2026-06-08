@@ -15,6 +15,8 @@ public class Downloader {
         try {
             URL url = new URL(address);
             URLConnection connection = url.openConnection();
+            connection.setConnectTimeout(15000);
+            connection.setReadTimeout(30000);
             connection.connect();
 
             // download the file
@@ -47,6 +49,8 @@ public class Downloader {
         try {
             URL url = new URL(address);
             URLConnection connection = url.openConnection();
+            connection.setConnectTimeout(15000);
+            connection.setReadTimeout(30000);
             connection.connect();
 
             InputStream input = url.openStream();
