@@ -45,6 +45,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.winlator.star.ui.LocalTopBarActions
 import com.winlator.star.ui.topBarActionsState
 import androidx.compose.ui.Modifier
