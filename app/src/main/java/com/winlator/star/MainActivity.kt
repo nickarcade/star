@@ -31,12 +31,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Surface
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.res.painterResource
@@ -48,7 +45,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import com.winlator.star.ui.LocalTopBarActions
 import com.winlator.star.ui.topBarActionsState
 import androidx.compose.ui.Modifier
@@ -67,7 +63,7 @@ import com.winlator.star.store.AmazonMainActivity
 import com.winlator.star.store.EpicMainActivity
 import com.winlator.star.store.GogMainActivity
 import com.winlator.star.store.SteamMainActivity
-import com.winlator.star.ui.AppDrawerContent
+import com.winlator.star.ui.MenuScreen
 import com.winlator.star.ui.AppNavGraph
 import com.winlator.star.ui.AppTopBar
 import com.winlator.star.ui.PreloaderOverlay
@@ -142,7 +138,7 @@ class MainActivity : AppCompatActivity() {
             editInputControls -> Screen.InputControls.route
             else -> {
                 val selectedMenuItemId = intent.getIntExtra("selected_menu_item_id", 0)
-                menuItemIdToRoute(selectedMenuItemId) ?: Screen.Shortcuts.route
+                menuItemIdToRoute(selectedMenuItemId) ?: Screen.Games.route
             }
         }
 
@@ -265,7 +261,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun menuItemIdToRoute(itemId: Int): String? = when (itemId) {
         R.id.main_menu_containers -> Screen.Containers.route
-        R.id.main_menu_shortcuts  -> Screen.Shortcuts.route
+        R.id.main_menu_shortcuts  -> Screen.Games.route
         R.id.main_menu_contents   -> Screen.Contents.route
         R.id.main_menu_input_controls -> Screen.InputControls.route
         R.id.main_menu_adrenotools_gpu_drivers -> Screen.AdrenoTools.route
@@ -288,10 +284,9 @@ private fun AppShell(
     onLaunchStore: (Screen) -> Unit,
 ) {
     val navController = rememberNavController()
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val topBarActionsState = remember { topBarActionsState() }
+    var showMenuScreen by remember { mutableStateOf(false) }
 
     val backstackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backstackEntry?.destination?.route ?: startRoute
@@ -310,15 +305,40 @@ private fun AppShell(
         else -> Screen.drawerItems.firstOrNull { it.route == currentRoute }?.label ?: "Winlator"
     }
 
-    CompositionLocalProvider(LocalTopBarActions provides topBarActionsState) {
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        gesturesEnabled = !editInputControls && !currentRoute.startsWith("container_detail"),
-        drawerContent = {
-            AppDrawerContent(
+    Box(modifier = Modifier.fillMaxSize()) {
+        CompositionLocalProvider(LocalTopBarActions provides topBarActionsState) {
+            Scaffold(
+                modifier = Modifier.fillMaxSize(),
+                topBar = {
+                    AppTopBar(
+                        title = screenTitle,
+                        showBack = editInputControls,
+                        onNavClick = {
+                            if (editInputControls) {
+                                navController.popBackStack()
+                            } else {
+                                showMenuScreen = true
+                            }
+                        },
+                        actions = topBarActionsState.value,
+                    )
+                },
+            ) { innerPadding ->
+                AppNavGraph(
+                    navController = navController,
+                    selectedInputProfileId = selectedInputProfileId,
+                    startRoute = startRoute,
+                    modifier = Modifier.padding(innerPadding),
+                )
+            }
+        }
+
+        // Full-screen menu overlay
+        if (showMenuScreen) {
+            MenuScreen(
                 currentRoute = currentRoute,
                 onNavigate = { screen ->
-                    scope.launch { drawerState.close() }
+                    showMenuScreen = false
                     navController.navigate(screen.route) {
                         popUpTo(navController.graph.startDestinationId) { saveState = true }
                         launchSingleTop = true
@@ -326,44 +346,17 @@ private fun AppShell(
                     }
                 },
                 onLaunchStore = { screen ->
-                    scope.launch { drawerState.close() }
+                    showMenuScreen = false
                     onLaunchStore(screen)
                 },
                 onAbout = {
-                    scope.launch { drawerState.close() }
+                    showMenuScreen = false
                     onAboutRequested()
                 },
-            )
-        },
-    ) {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = {
-                AppTopBar(
-                    title = screenTitle,
-                    showBack = editInputControls,
-                    onNavClick = {
-                        if (editInputControls) {
-                            navController.popBackStack()
-                        } else {
-                            scope.launch {
-                                if (drawerState.isOpen) drawerState.close() else drawerState.open()
-                            }
-                        }
-                    },
-                    actions = topBarActionsState.value,
-                )
-            },
-        ) { innerPadding ->
-            AppNavGraph(
-                navController = navController,
-                selectedInputProfileId = selectedInputProfileId,
-                startRoute = startRoute,
-                modifier = Modifier.padding(innerPadding),
+                onClose = { showMenuScreen = false },
             )
         }
     }
-    } // end CompositionLocalProvider
 
     if (showAllFilesDialog) {
         AllFilesAccessDialog(

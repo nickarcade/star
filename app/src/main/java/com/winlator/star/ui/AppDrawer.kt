@@ -2,15 +2,18 @@ package com.winlator.star.ui
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,22 +23,22 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.OpenInNew
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SportsEsports
-import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,11 +47,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.winlator.star.R
@@ -61,9 +70,15 @@ private val DarkSurface = Color(0xFF0D0D0D)
 private val MutedWhite = Color(0xFF999999)
 private val DimWhite = Color(0xFFE8E8E8)
 
+private enum class MenuTab { EMULATION, TOOLS, ABOUT }
+private enum class StoreTab { LOCAL, STEAM, EPIC, GOG }
+
+private val PurpleGradient = Brush.horizontalGradient(listOf(Color(0xFF8B6BE0), GlowPurple))
+private val PurpleGradientVertical = Brush.verticalGradient(listOf(Color(0xFF8B6BE0), GlowPurple))
+
 private fun iconFor(screen: Screen): ImageVector = when (screen) {
     Screen.Containers    -> Icons.Filled.FolderOpen
-    Screen.Shortcuts     -> Icons.Filled.OpenInNew
+    Screen.Games         -> Icons.Filled.OpenInNew
     Screen.InputControls -> Icons.Filled.SportsEsports
     Screen.AdrenoTools   -> Icons.Filled.Memory
     Screen.Saves         -> Icons.Filled.Save
@@ -71,16 +86,19 @@ private fun iconFor(screen: Screen): ImageVector = when (screen) {
     Screen.Settings      -> Icons.Filled.Settings
     Screen.Appearance    -> Icons.Filled.Palette
     Screen.LsfgSettings  -> Icons.Filled.Settings
-    else                 -> Icons.Filled.Storefront
+    else                 -> Icons.Filled.OpenInNew
 }
 
 @Composable
-fun AppDrawerContent(
+fun MenuScreen(
     currentRoute: String,
     onNavigate: (Screen) -> Unit,
     onLaunchStore: (Screen) -> Unit,
     onAbout: () -> Unit,
+    onClose: () -> Unit,
 ) {
+    var selectedTab by remember { mutableStateOf(MenuTab.EMULATION) }
+    var selectedStore by remember { mutableStateOf(StoreTab.LOCAL) }
     var showHelp by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -93,96 +111,249 @@ fun AppDrawerContent(
         )
     }
 
-    Column(
+    Box(
         modifier = Modifier
-            .fillMaxHeight()
-            .width(280.dp)
+            .fillMaxSize()
             .background(PureBlack)
-            .verticalScroll(rememberScrollState()),
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        // Close button
+        IconButton(
+            onClick = onClose,
             modifier = Modifier
-                .fillMaxWidth()
-                .background(DarkSurface)
-                .padding(horizontal = 20.dp, vertical = 20.dp),
+                .align(Alignment.TopStart)
+                .padding(12.dp)
+                .size(36.dp),
         ) {
-            Image(
-                painter = painterResource(R.mipmap.ic_launcher_foreground),
-                contentDescription = null,
-                modifier = Modifier.size(44.dp),
-            )
-            Spacer(Modifier.width(12.dp))
-            Text(
-                text = "Star Bionic",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = DimWhite,
+            Icon(
+                imageVector = Icons.Filled.Close,
+                contentDescription = "Close menu",
+                tint = DimWhite,
             )
         }
 
-        Spacer(Modifier.height(16.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 56.dp)
+        ) {
+            // ── LEFT: Content area ──
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .padding(start = 16.dp, end = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                // Store pill
+                StorePill(
+                    selectedTab = selectedStore,
+                    onSelect = { tab ->
+                        selectedStore = tab
+                        if (tab != StoreTab.LOCAL) {
+                            val screen = when (tab) {
+                                StoreTab.STEAM -> Screen.Steam
+                                StoreTab.EPIC -> Screen.Epic
+                                StoreTab.GOG -> Screen.Gog
+                                else -> null
+                            }
+                            screen?.let { onLaunchStore(it) }
+                        }
+                    },
+                )
 
-        SectionLabel("EMULATION")
-        Spacer(Modifier.height(8.dp))
-        PurpleDrawerItem(Screen.Shortcuts,     currentRoute, onNavigate)
-        Spacer(Modifier.height(6.dp))
-        PurpleDrawerItem(Screen.Containers,    currentRoute, onNavigate)
-        Spacer(Modifier.height(6.dp))
-        PurpleDrawerItem(Screen.Settings,      currentRoute, onNavigate)
+                Spacer(Modifier.height(24.dp))
 
-        Spacer(Modifier.height(20.dp))
-        SectionLabel("TOOLS")
-        Spacer(Modifier.height(8.dp))
-        PurpleDrawerItem(Screen.InputControls, currentRoute, onNavigate)
-        Spacer(Modifier.height(6.dp))
-        PurpleDrawerItem(Screen.AdrenoTools,   currentRoute, onNavigate)
-        Spacer(Modifier.height(6.dp))
-        PurpleDrawerItem(Screen.Saves,         currentRoute, onNavigate)
-        Spacer(Modifier.height(6.dp))
-        PurpleDrawerItem(Screen.LsfgSettings,  currentRoute, onNavigate)
+                // Section label
+                Text(
+                    text = selectedTab.name,
+                    color = MutedWhite,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 2.sp,
+                    modifier = Modifier.fillMaxWidth(),
+                )
 
-        Spacer(Modifier.height(20.dp))
-        SectionLabel("GAME STORES")
-        Spacer(Modifier.height(8.dp))
-        Screen.storeItems.forEach { screen ->
-            PurpleStoreItem(screen, onLaunchStore)
-            Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(12.dp))
+
+                // Tab content items
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    when (selectedTab) {
+                        MenuTab.EMULATION -> {
+                            EmulationItems(currentRoute, onNavigate)
+                        }
+                        MenuTab.TOOLS -> {
+                            ToolsItems(currentRoute, onNavigate)
+                        }
+                        MenuTab.ABOUT -> {
+                            AboutItems(onAbout, { showHelp = true })
+                        }
+                    }
+                }
+            }
+
+            // ── RIGHT: Tab bar ──
+            Column(
+                modifier = Modifier
+                    .width(64.dp)
+                    .fillMaxHeight()
+                    .padding(end = 8.dp, top = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Spacer(Modifier.weight(1f))
+
+                MenuTabButton("EMULATION", selectedTab == MenuTab.EMULATION) { selectedTab = MenuTab.EMULATION }
+                MenuTabButton("TOOLS", selectedTab == MenuTab.TOOLS) { selectedTab = MenuTab.TOOLS }
+                MenuTabButton("ABOUT", selectedTab == MenuTab.ABOUT) { selectedTab = MenuTab.ABOUT }
+
+                Spacer(Modifier.weight(1f))
+            }
         }
-
-        Spacer(Modifier.height(20.dp))
-        SectionLabel("ABOUT & SUPPORT")
-        Spacer(Modifier.height(8.dp))
-        PurpleIconItem(
-            label = "About",
-            icon = Icons.Filled.Info,
-            onClick = onAbout,
-        )
-        Spacer(Modifier.height(6.dp))
-        PurpleIconItem(
-            label = "Help and Support",
-            icon = Icons.Filled.HelpOutline,
-            onClick = { showHelp = true },
-        )
-
-        Spacer(Modifier.height(24.dp))
     }
 }
 
 @Composable
-private fun SectionLabel(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelSmall,
-        color = MutedWhite,
-        fontWeight = FontWeight.SemiBold,
-        letterSpacing = 1.sp,
-        modifier = Modifier.padding(start = 20.dp),
-    )
+private fun StorePill(selectedTab: StoreTab, onSelect: (StoreTab) -> Unit) {
+    val pillHeight = 40.dp
+    val storeLabels = listOf("LOCAL", "STEAM", "EPIC", "GOG")
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(pillHeight),
+    ) {
+        // Gradient border pill drawn via Canvas
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val rectSize = Size(size.width, size.height)
+            drawRoundRect(
+                brush = Brush.horizontalGradient(listOf(Color(0xFF8B6BE0), Color(0xFFBB86FC), Color(0xFF8B6BE0))),
+                size = rectSize,
+                cornerRadius = CornerRadius(rectSize.height / 2f),
+                style = Stroke(width = 2.dp.toPx()),
+            )
+        }
+
+        // Dark fill inside
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(2.dp)
+                .clip(RoundedCornerShape(pillHeight / 2))
+                .background(DarkSurface),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                StoreTab.entries.forEachIndexed { index, tab ->
+                    val isSelected = tab == selectedTab
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clickable { onSelect(tab) },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = storeLabels[index],
+                            fontSize = 12.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) Color.White else MutedWhite,
+                            textAlign = TextAlign.Center,
+                        )
+                        // Gradient underline for selected
+                        if (isSelected) {
+                            Canvas(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(3.dp)
+                                    .align(Alignment.BottomCenter)
+                                    .padding(horizontal = 8.dp)
+                            ) {
+                                drawRoundRect(
+                                    brush = PurpleGradient,
+                                    size = Size(size.width, size.height),
+                                    cornerRadius = CornerRadius(size.height / 2f),
+                                )
+                            }
+                        }
+                    }
+                    if (index < StoreTab.entries.size - 1) {
+                        Box(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .fillMaxHeight()
+                                .padding(vertical = 10.dp)
+                                .background(Color(0xFF333333)),
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
-private fun PurpleDrawerItem(screen: Screen, currentRoute: String, onNavigate: (Screen) -> Unit) {
+private fun MenuTabButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
+    val bg = if (isSelected) {
+        Brush.verticalGradient(listOf(PrimaryDim, Primary.copy(alpha = 0.15f)))
+    } else {
+        Brush.verticalGradient(listOf(Color.Transparent, Color.Transparent))
+    }
+    val border = if (isSelected) GlowPurple.copy(alpha = 0.5f) else Color(0xFF222222)
+    val textColor = if (isSelected) Color.White else MutedWhite
+
+    Box(
+        modifier = Modifier
+            .width(48.dp)
+            .height(80.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(bg, RoundedCornerShape(12.dp))
+            .border(1.5.dp, border, RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            fontSize = 9.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            color = textColor,
+            textAlign = TextAlign.Center,
+            letterSpacing = 0.5.sp,
+            lineHeight = 11.sp,
+        )
+    }
+}
+
+@Composable
+private fun EmulationItems(currentRoute: String, onNavigate: (Screen) -> Unit) {
+    MenuCardItem(Screen.Containers, currentRoute, onNavigate)
+    MenuCardItem(Screen.Settings, currentRoute, onNavigate)
+    MenuCardItem(Screen.Appearance, currentRoute, onNavigate)
+}
+
+@Composable
+private fun ToolsItems(currentRoute: String, onNavigate: (Screen) -> Unit) {
+    MenuCardItem(Screen.InputControls, currentRoute, onNavigate)
+    MenuCardItem(Screen.AdrenoTools, currentRoute, onNavigate)
+    MenuCardItem(Screen.Saves, currentRoute, onNavigate)
+    MenuCardItem(Screen.LsfgSettings, currentRoute, onNavigate)
+    MenuCardItem(Screen.FileManager, currentRoute, onNavigate)
+}
+
+@Composable
+private fun AboutItems(onAbout: () -> Unit, onHelp: () -> Unit) {
+    MenuIconItem(label = "About", icon = Icons.Filled.Info, onClick = onAbout)
+    MenuIconItem(label = "Help and Support", icon = Icons.Filled.HelpOutline, onClick = onHelp)
+}
+
+@Composable
+private fun MenuCardItem(screen: Screen, currentRoute: String, onNavigate: (Screen) -> Unit) {
     val selected = currentRoute == screen.route
     val bgBrush = if (selected)
         Brush.horizontalGradient(listOf(PrimaryDim, Primary.copy(alpha = 0.15f)))
@@ -195,7 +366,6 @@ private fun PurpleDrawerItem(screen: Screen, currentRoute: String, onNavigate: (
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(bgBrush, RoundedCornerShape(12.dp))
             .border(1.5.dp, borderColor, RoundedCornerShape(12.dp))
@@ -219,40 +389,11 @@ private fun PurpleDrawerItem(screen: Screen, currentRoute: String, onNavigate: (
 }
 
 @Composable
-private fun PurpleStoreItem(screen: Screen, onLaunchStore: (Screen) -> Unit) {
+private fun MenuIconItem(label: String, icon: ImageVector, onClick: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(DarkSurface, RoundedCornerShape(12.dp))
-            .border(1.5.dp, Color(0xFF222222), RoundedCornerShape(12.dp))
-            .clickable { onLaunchStore(screen) }
-            .padding(horizontal = 14.dp, vertical = 13.dp),
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Storefront,
-            contentDescription = null,
-            tint = MutedWhite,
-            modifier = Modifier.size(20.dp),
-        )
-        Spacer(Modifier.width(14.dp))
-        Text(
-            text = screen.label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = DimWhite,
-        )
-    }
-}
-
-@Composable
-private fun PurpleIconItem(label: String, icon: ImageVector, onClick: () -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(DarkSurface, RoundedCornerShape(12.dp))
             .border(1.5.dp, Color(0xFF222222), RoundedCornerShape(12.dp))

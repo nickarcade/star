@@ -25,7 +25,7 @@ import com.winlator.star.ui.screens.LsfgSettingsScreen
 fun AppNavGraph(
     navController: NavHostController,
     selectedInputProfileId: Int,
-    startRoute: String = Screen.Shortcuts.route,
+    startRoute: String = Screen.Games.route,
     modifier: Modifier = Modifier,
 ) {
     val activity = LocalContext.current as FragmentActivity
@@ -62,7 +62,7 @@ fun AppNavGraph(
             )
         }
 
-        composable(Screen.Shortcuts.route) {
+        composable(Screen.Games.route) {
             ShortcutsScreen()
         }
 
