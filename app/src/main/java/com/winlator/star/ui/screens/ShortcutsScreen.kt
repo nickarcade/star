@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -48,9 +47,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -95,13 +94,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -257,42 +260,41 @@ fun ShortcutsScreen(onLaunchStore: (Screen) -> Unit = {}, onOpenDrawer: () -> Un
             )
         }
 
-        // ── Carousel ──
-        LazyRow(
+        // ── Game List ──
+        LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
         ) {
-            item {
-                GameAddCard(
-                    modifier = Modifier
-                        .fillParentMaxHeight()
-                        .aspectRatio(3f / 4f),
+            item(key = "__add_game__") {
+                AddGameRow(
                     phase = snakePhase,
                     snakeColor = snakeBorderColor,
                     onClick = { showImportContainerPicker = true },
                 )
             }
             itemsIndexed(shortcuts, key = { i, s -> s.file.path }) { _, shortcut ->
-                GameCard(
-                    modifier = Modifier
-                        .fillParentMaxHeight()
-                        .aspectRatio(3f / 4f),
+                GameRow(
                     shortcut = shortcut,
                     phase = snakePhase,
                     snakeColor = snakeBorderColor,
                     onRun = { runShortcut(activity, shortcut) },
                     onSettings = { settingsShortcut = shortcut },
-                    onRemove = { confirmRemove = shortcut },
-                    onClone = { cloneTarget = shortcut },
-                    onAddToHome = { addToHomeScreen(context, shortcut) },
-                    onExport = { exportShortcut(context, shortcut) },
-                    onProperties = { propertiesShortcut = shortcut },
+                    onSelect = { propertiesShortcut = shortcut },
                 )
             }
         }
+    }
+
+    // ── Properties Panel ──
+    if (propertiesShortcut != null) {
+        PropertiesPanel(
+            shortcut = propertiesShortcut!!,
+            onDismiss = { propertiesShortcut = null },
+            onRun = { runShortcut(activity, propertiesShortcut!!) },
+            onSettings = { settingsShortcut = propertiesShortcut!!; propertiesShortcut = null },
+        )
     }
 
     // Import container picker
@@ -1495,74 +1497,144 @@ private fun SnakeBorderBox(
     }
 }
 
-// ───── Game Add Card ─────
+// ───── Gradient Helpers ─────
+
+private val appGradient: Brush
+    get() = Brush.horizontalGradient(
+        colors = listOf(GlowPurple, Color(0xFFD488FF)),
+    )
 
 @Composable
-private fun GameAddCard(
-    modifier: Modifier,
+private fun GradientText(text: String, modifier: Modifier = Modifier, fontSize: TextUnit = 14.sp, fontWeight: FontWeight = FontWeight.Normal) {
+    Text(
+        text = text,
+        brush = appGradient,
+        fontSize = fontSize,
+        fontWeight = fontWeight,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun GradientIcon(icon: ImageVector, modifier: Modifier = Modifier) {
+    Box(modifier = modifier.drawWithContent {
+        drawContent()
+        drawRect(appGradient, blendMode = BlendMode.SrcIn)
+    }) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.matchParentSize(),
+        )
+    }
+}
+
+// ───── Add Game Row ─────
+
+@Composable
+private fun AddGameRow(
     phase: Float,
     snakeColor: Color,
     onClick: () -> Unit,
 ) {
     SnakeBorderBox(
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         phase = phase,
         color = snakeColor,
-        cornerRadius = 8.dp,
+        cornerRadius = 6.dp,
+        strokeWidth = 1.5.dp,
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(RoundedCornerShape(8.dp)),
-            contentAlignment = Alignment.Center,
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    Icons.Filled.Add,
-                    contentDescription = null,
-                    tint = GlowPurple,
-                    modifier = Modifier.size(40.dp),
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "Add Game",
-                    color = OnSurfaceVariant,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                )
-            }
+            GradientIcon(
+                icon = Icons.Filled.Add,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(Modifier.width(8.dp))
+            GradientText(
+                text = "Add Game",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+            )
         }
     }
 }
 
-// ───── Game Card ─────
+// ───── Game Row ─────
 
 @Composable
-private fun GameCard(
-    modifier: Modifier,
+private fun GameRow(
     shortcut: Shortcut,
     phase: Float,
     snakeColor: Color,
     onRun: () -> Unit,
     onSettings: () -> Unit,
-    onRemove: () -> Unit,
-    onClone: () -> Unit,
-    onAddToHome: () -> Unit,
-    onExport: () -> Unit,
-    onProperties: () -> Unit,
+    onSelect: () -> Unit,
 ) {
-    Column(modifier = modifier) {
-        // ── Cover with snake ──
+    val playtime = shortcut.getExtra("playtime", "0")
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onSelect)
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // Left: title + playtime
+        Column(modifier = Modifier.weight(1f)) {
+            GradientText(
+                text = shortcut.name,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = "${playtime}h played",
+                fontSize = 11.sp,
+                color = OnSurfaceVariant,
+            )
+        }
+
+        // Purple divider
+        Box(
+            modifier = Modifier
+                .width(2.dp)
+                .height(32.dp)
+                .background(GlowPurple, RoundedCornerShape(1.dp)),
+        )
+        Spacer(Modifier.width(4.dp))
+
+        // Action icons
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            IconButton(onClick = onRun, modifier = Modifier.size(28.dp)) {
+                GradientIcon(
+                    icon = Icons.Filled.PlayArrow,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+            IconButton(onClick = onSettings, modifier = Modifier.size(28.dp)) {
+                GradientIcon(
+                    icon = Icons.Filled.Settings,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        }
+
+        Spacer(Modifier.width(8.dp))
+
+        // Cover thumbnail with snake
         SnakeBorderBox(
-            modifier = Modifier.weight(1f).fillMaxWidth(),
+            modifier = Modifier.size(56.dp),
             phase = phase,
             color = snakeColor,
-            cornerRadius = 8.dp,
+            cornerRadius = 4.dp,
+            strokeWidth = 1.5.dp,
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(8.dp)),
+                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(4.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 if (shortcut.icon != null) {
@@ -1577,73 +1649,58 @@ private fun GameCard(
                         imageVector = Icons.Filled.OpenInNew,
                         contentDescription = null,
                         tint = GlowPurple,
-                        modifier = Modifier.size(48.dp),
+                        modifier = Modifier.size(24.dp),
                     )
                 }
             }
         }
+    }
+}
 
-        Spacer(Modifier.height(4.dp))
+// ───── Properties Panel ─────
 
-        // ── Title row: name + gear ──
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = shortcut.name,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 12.sp,
-                color = Color.White,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
-            IconButton(
-                onClick = onSettings,
-                modifier = Modifier.size(24.dp),
-            ) {
-                Icon(
-                    Icons.Filled.Settings,
-                    contentDescription = "Settings",
-                    tint = OnSurfaceVariant,
-                    modifier = Modifier.size(16.dp),
-                )
+@Composable
+private fun PropertiesPanel(
+    shortcut: Shortcut,
+    onDismiss: () -> Unit,
+    onRun: () -> Unit,
+    onSettings: () -> Unit,
+) {
+    val containerName = shortcut.container?.name ?: "—"
+    val resolution = shortcut.getExtra("screenSize", shortcut.container?.getScreenSize() ?: "—")
+    val driverCfg = shortcut.getExtra("graphicsDriverConfig", shortcut.container?.getGraphicsDriverConfig() ?: "")
+    val driverLabel = if (driverCfg.isNotEmpty()) {
+        val parts = driverCfg.split("/")
+        parts.lastOrNull() ?: driverCfg
+    } else "—"
+    val dxwrapperCfg = shortcut.getExtra("dxwrapperConfig", shortcut.container?.getDXWrapperConfig() ?: "")
+    val cfgMap = dxwrapperCfg.split(",").mapNotNull {
+        val p = it.split("=", limit = 2)
+        if (p.size == 2) p[0].trim() to p[1].trim() else null
+    }.toMap()
+    val dxvkVersion = cfgMap["version"] ?: "—"
+    val playtime = shortcut.getExtra("playtime", "0")
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = SurfaceColor,
+        tonalElevation = 2.dp,
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                GradientText(shortcut.name, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                IconButton(onClick = onRun, modifier = Modifier.size(28.dp)) {
+                    GradientIcon(Icons.Filled.PlayArrow, Modifier.size(18.dp))
+                }
+                IconButton(onClick = onSettings, modifier = Modifier.size(28.dp)) {
+                    GradientIcon(Icons.Filled.Settings, Modifier.size(16.dp))
+                }
+                IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Filled.Close, contentDescription = "Close", tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
+                }
             }
-        }
-
-        Spacer(Modifier.height(2.dp))
-
-        // ── Play button with snake ──
-        SnakeBorderBox(
-            modifier = Modifier.fillMaxWidth(),
-            phase = phase,
-            color = snakeColor,
-            cornerRadius = 6.dp,
-            strokeWidth = 1.5.dp,
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = onRun)
-                    .padding(vertical = 6.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    Icons.Filled.PlayArrow,
-                    contentDescription = null,
-                    tint = GlowPurple,
-                    modifier = Modifier.size(16.dp),
-                )
-                Spacer(Modifier.width(4.dp))
-                Text(
-                    text = "PLAY",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = GlowPurple,
-                )
-            }
+            Divider(color = GlowPurple.copy(alpha = 0.4f), thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+            Text("$resolution · $driverLabel · DXVK $dxvkVersion · Container: $containerName · ${playtime}h played", fontSize = 11.sp, color = OnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
