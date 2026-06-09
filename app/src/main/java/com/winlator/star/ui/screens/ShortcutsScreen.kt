@@ -14,9 +14,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Arrangement
@@ -44,35 +42,25 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddToHomeScreen
-import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.SwapVert
-import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Upload
@@ -95,7 +83,6 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -106,10 +93,8 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.winlator.star.ui.LocalTopBarActions
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -167,7 +152,6 @@ import java.io.BufferedReader
 import java.io.FileReader
 import java.io.IOException
 import java.lang.reflect.Field
-import kotlin.math.abs
 
 @Composable
 fun ShortcutsScreen(onLaunchStore: (Screen) -> Unit = {}, onOpenDrawer: () -> Unit = {}, vm: ShortcutsViewModel = viewModel()) {
@@ -212,8 +196,6 @@ fun ShortcutsScreen(onLaunchStore: (Screen) -> Unit = {}, onOpenDrawer: () -> Un
         ),
         label = "snakePhase",
     )
-
-    val listState = rememberLazyListState()
 
     Column(modifier = Modifier.fillMaxSize()) {
         // ── Header: ☰  [My Games]  STEAM  EPIC  GOG ──
@@ -277,40 +259,27 @@ fun ShortcutsScreen(onLaunchStore: (Screen) -> Unit = {}, onOpenDrawer: () -> Un
 
         // ── Carousel ──
         LazyRow(
-            state = listState,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            contentPadding = PaddingValues(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy((-16).dp),
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // Add Game card (first item)
             item {
-                val scale = cardScale(listState, 0)
                 GameAddCard(
                     modifier = Modifier
                         .fillParentMaxHeight()
-                        .aspectRatio(2f / 3f)
-                        .graphicsLayer {
-                            scaleX = scale; scaleY = scale
-                            clip = false
-                        },
+                        .aspectRatio(3f / 4f),
                     phase = snakePhase,
                     snakeColor = snakeBorderColor,
                     onClick = { showImportContainerPicker = true },
                 )
             }
-            itemsIndexed(shortcuts, key = { i, s -> s.file.path }) { index, shortcut ->
-                val itemIndex = index + 1
-                val scale = cardScale(listState, itemIndex)
+            itemsIndexed(shortcuts, key = { i, s -> s.file.path }) { _, shortcut ->
                 GameCard(
                     modifier = Modifier
                         .fillParentMaxHeight()
-                        .aspectRatio(2f / 3f)
-                        .graphicsLayer {
-                            scaleX = scale; scaleY = scale
-                            clip = false
-                        },
+                        .aspectRatio(3f / 4f),
                     shortcut = shortcut,
                     phase = snakePhase,
                     snakeColor = snakeBorderColor,
@@ -487,210 +456,6 @@ fun ShortcutsScreen(onLaunchStore: (Screen) -> Unit = {}, onOpenDrawer: () -> Un
             shortcut = s,
             onDismiss = { settingsShortcut = null; vm.refresh() }
         )
-    }
-}
-
-@Composable
-private fun ShortcutItem(
-    shortcut: Shortcut,
-    onRun: () -> Unit,
-    onSettings: () -> Unit,
-    onRemove: () -> Unit,
-    onClone: () -> Unit,
-    onAddToHome: () -> Unit,
-    onExport: () -> Unit,
-    onProperties: () -> Unit,
-) {
-    var menuExpanded by remember { mutableStateOf(false) }
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(SurfaceColor)
-            .clickable(onClick = onRun)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-    ) {
-        if (shortcut.icon != null) {
-            Image(
-                bitmap = shortcut.icon.asImageBitmap(),
-                contentDescription = null,
-                modifier = Modifier.size(40.dp),
-            )
-        } else {
-            Icon(
-                imageVector = Icons.Filled.OpenInNew,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(40.dp),
-            )
-        }
-        Spacer(modifier = Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = shortcut.name,
-                style = MaterialTheme.typography.bodyLarge,
-                color = OnSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = shortcut.container?.name ?: "",
-                style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        // Info column — resolution + driver/wrapper
-        val resolution = shortcut.getExtra("screenSize", shortcut.container?.getScreenSize() ?: "")
-        val driverCfg = shortcut.getExtra("graphicsDriverConfig", shortcut.container?.getGraphicsDriverConfig() ?: "")
-        val driverLabel = if (driverCfg.isNotEmpty()) GraphicsDriverConfigDialog.getVersion(driverCfg) else ""
-        val dxwrapperCfg = shortcut.getExtra("dxwrapperConfig", shortcut.container?.getDXWrapperConfig() ?: "")
-        val cfgMap = dxwrapperCfg.split(",").mapNotNull {
-            val parts = it.split("=", limit = 2)
-            if (parts.size == 2) parts[0].trim() to parts[1].trim() else null
-        }.toMap()
-        val dxvkVersion = cfgMap["version"] ?: ""
-        val vkd3dVersion = cfgMap["vkd3dVersion"] ?: ""
-        Column(
-            horizontalAlignment = Alignment.End,
-            modifier = Modifier.padding(end = 4.dp),
-        ) {
-            val topLine = listOf(resolution, driverLabel).filter { it.isNotEmpty() }.joinToString(" · ")
-            if (topLine.isNotEmpty()) {
-                Text(topLine, fontSize = 10.sp, color = OnSurfaceVariant, maxLines = 1)
-            }
-            val bottomLine = listOfNotNull(
-                if (dxvkVersion.isNotEmpty()) "DXVK $dxvkVersion" else null,
-                if (vkd3dVersion.isNotEmpty()) "VKD3D $vkd3dVersion" else null,
-            ).joinToString(" · ")
-            if (bottomLine.isNotEmpty()) {
-                Text(bottomLine, fontSize = 10.sp, color = OnSurfaceVariant, maxLines = 1)
-            }
-        }
-        Box {
-            IconButton(onClick = { menuExpanded = true }) {
-                Icon(Icons.Filled.MoreVert, contentDescription = "Options", tint = OnSurfaceVariant)
-            }
-            DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-                DropdownMenuItem(
-                    text = { Text("Settings") },
-                    leadingIcon = { Icon(Icons.Filled.Settings, null) },
-                    onClick = { menuExpanded = false; onSettings() },
-                )
-                DropdownMenuItem(
-                    text = { Text("Remove") },
-                    leadingIcon = { Icon(Icons.Filled.Delete, null) },
-                    onClick = { menuExpanded = false; onRemove() },
-                )
-                DropdownMenuItem(
-                    text = { Text("Clone to container") },
-                    leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
-                    onClick = { menuExpanded = false; onClone() },
-                )
-                DropdownMenuItem(
-                    text = { Text("Add to home screen") },
-                    leadingIcon = { Icon(Icons.Filled.AddToHomeScreen, null) },
-                    onClick = { menuExpanded = false; onAddToHome() },
-                )
-                DropdownMenuItem(
-                    text = { Text("Export") },
-                    leadingIcon = { Icon(Icons.Filled.Upload, null) },
-                    onClick = { menuExpanded = false; onExport() },
-                )
-                DropdownMenuItem(
-                    text = { Text("Properties") },
-                    leadingIcon = { Icon(Icons.Filled.Info, null) },
-                    onClick = { menuExpanded = false; onProperties() },
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun ShortcutGridItem(
-    shortcut: Shortcut,
-    onRun: () -> Unit,
-    onSettings: () -> Unit,
-    onRemove: () -> Unit,
-    onClone: () -> Unit,
-    onAddToHome: () -> Unit,
-    onExport: () -> Unit,
-    onProperties: () -> Unit,
-) {
-    var menuExpanded by remember { mutableStateOf(false) }
-
-    Box(
-        modifier = Modifier
-            .aspectRatio(2f / 3f)
-            .clip(RoundedCornerShape(8.dp))
-            .background(SurfaceColor)
-            .combinedClickable(onClick = onRun, onLongClick = { menuExpanded = true }),
-    ) {
-        // Cover image fills the entire tile
-        if (shortcut.icon != null) {
-            Image(
-                bitmap = shortcut.icon.asImageBitmap(),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        } else {
-            Icon(
-                imageVector = Icons.Filled.OpenInNew,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-            )
-        }
-
-        // Gradient scrim + name/container at the bottom
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomStart)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.75f))
-                    )
-                )
-                .padding(horizontal = 8.dp, vertical = 6.dp),
-        ) {
-            Column {
-                Text(
-                    text = shortcut.name,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (!shortcut.container?.name.isNullOrEmpty()) {
-                    Text(
-                        text = shortcut.container?.name ?: "",
-                        fontSize = 10.sp,
-                        color = Color.White.copy(alpha = 0.7f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-        }
-
-        // Long-press context menu
-        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-            DropdownMenuItem(text = { Text("Settings") }, leadingIcon = { Icon(Icons.Filled.Settings, null) }, onClick = { menuExpanded = false; onSettings() })
-            DropdownMenuItem(text = { Text("Remove") }, leadingIcon = { Icon(Icons.Filled.Delete, null) }, onClick = { menuExpanded = false; onRemove() })
-            DropdownMenuItem(text = { Text("Clone to container") }, leadingIcon = { Icon(Icons.Filled.ContentCopy, null) }, onClick = { menuExpanded = false; onClone() })
-            DropdownMenuItem(text = { Text("Add to home screen") }, leadingIcon = { Icon(Icons.Filled.AddToHomeScreen, null) }, onClick = { menuExpanded = false; onAddToHome() })
-            DropdownMenuItem(text = { Text("Export") }, leadingIcon = { Icon(Icons.Filled.Upload, null) }, onClick = { menuExpanded = false; onExport() })
-            DropdownMenuItem(text = { Text("Properties") }, leadingIcon = { Icon(Icons.Filled.Info, null) }, onClick = { menuExpanded = false; onProperties() })
-        }
     }
 }
 
@@ -1690,24 +1455,6 @@ private fun exportShortcut(context: Context, shortcut: Shortcut) {
     }
 }
 
-// ───── Cover-flow scale helper ─────
-
-@Composable
-private fun cardScale(listState: LazyListState, itemIndex: Int): Float {
-    return remember {
-        derivedStateOf {
-            val layoutInfo = listState.layoutInfo
-            val item = layoutInfo.visibleItemsInfo.getOrNull(itemIndex)
-                ?: return@derivedStateOf 0.85f
-            val viewportCenter = layoutInfo.viewportEndOffset / 2f
-            val itemCenter = item.offset + item.size / 2f
-            val distance = abs(viewportCenter - itemCenter)
-            val maxDistance = layoutInfo.viewportEndOffset / 2f
-            (1f - 0.25f * (distance / maxDistance)).coerceIn(0.75f, 1f)
-        }
-    }.value
-}
-
 // ───── Snake Border Box ─────
 
 @Composable
@@ -1726,28 +1473,11 @@ private fun SnakeBorderBox(
             val h = size.height
             if (w <= 0 || h <= 0) return@Canvas
             val perimeter = 2 * (w + h)
-            val headLen = perimeter * 0.06f
-            val trailLen = perimeter * 0.30f
+            val dashLen = perimeter * 0.35f
             val cr = cornerRadius.toPx()
 
             val rectPath = Path().apply {
                 addRoundRect(RoundRect(0f, 0f, w, h, cr, cr))
-            }
-
-            for (i in 1..6) {
-                val offset = headLen + (trailLen / 6f) * i
-                val alpha = 0.35f * (1f - i.toFloat() / 6f)
-                drawPath(
-                    rectPath,
-                    color = color.copy(alpha = alpha),
-                    style = Stroke(
-                        width = strokeWidth.toPx(),
-                        pathEffect = PathEffect.dashPathEffect(
-                            floatArrayOf(headLen * 0.5f, perimeter - headLen * 0.5f),
-                            phase = phase * perimeter + offset,
-                        ),
-                    ),
-                )
             }
 
             drawPath(
@@ -1756,7 +1486,7 @@ private fun SnakeBorderBox(
                 style = Stroke(
                     width = strokeWidth.toPx(),
                     pathEffect = PathEffect.dashPathEffect(
-                        floatArrayOf(headLen, perimeter - headLen),
+                        floatArrayOf(dashLen, perimeter - dashLen),
                         phase = phase * perimeter,
                     ),
                 ),
@@ -1807,7 +1537,6 @@ private fun GameAddCard(
 
 // ───── Game Card ─────
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun GameCard(
     modifier: Modifier,
@@ -1822,10 +1551,8 @@ private fun GameCard(
     onExport: () -> Unit,
     onProperties: () -> Unit,
 ) {
-    var menuExpanded by remember { mutableStateOf(false) }
-
     Column(modifier = modifier) {
-        // ── Cover with snake border (takes most vertical space) ──
+        // ── Cover with snake ──
         SnakeBorderBox(
             modifier = Modifier.weight(1f).fillMaxWidth(),
             phase = phase,
@@ -1856,24 +1583,38 @@ private fun GameCard(
             }
         }
 
-        Spacer(Modifier.height(6.dp))
-
-        // ── Title (plain, outside cover) ──
-        Text(
-            text = shortcut.name,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 12.sp,
-            color = Color.White,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp),
-        )
-
         Spacer(Modifier.height(4.dp))
 
-        // ── Play button with its own snake border ──
+        // ── Title row: name + gear ──
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = shortcut.name,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 12.sp,
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(
+                onClick = onSettings,
+                modifier = Modifier.size(24.dp),
+            ) {
+                Icon(
+                    Icons.Filled.Settings,
+                    contentDescription = "Settings",
+                    tint = OnSurfaceVariant,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        }
+
+        Spacer(Modifier.height(2.dp))
+
+        // ── Play button with snake ──
         SnakeBorderBox(
             modifier = Modifier.fillMaxWidth(),
             phase = phase,
@@ -1884,10 +1625,7 @@ private fun GameCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .combinedClickable(
-                        onClick = onRun,
-                        onLongClick = { menuExpanded = true },
-                    )
+                    .clickable(onClick = onRun)
                     .padding(vertical = 6.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
@@ -1907,42 +1645,6 @@ private fun GameCard(
                 )
             }
         }
-    }
-
-    DropdownMenu(
-        expanded = menuExpanded,
-        onDismissRequest = { menuExpanded = false },
-    ) {
-        DropdownMenuItem(
-            text = { Text("Settings") },
-            leadingIcon = { Icon(Icons.Filled.Settings, null) },
-            onClick = { menuExpanded = false; onSettings() },
-        )
-        DropdownMenuItem(
-            text = { Text("Remove") },
-            leadingIcon = { Icon(Icons.Filled.Delete, null) },
-            onClick = { menuExpanded = false; onRemove() },
-        )
-        DropdownMenuItem(
-            text = { Text("Clone to container") },
-            leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
-            onClick = { menuExpanded = false; onClone() },
-        )
-        DropdownMenuItem(
-            text = { Text("Add to home screen") },
-            leadingIcon = { Icon(Icons.Filled.AddToHomeScreen, null) },
-            onClick = { menuExpanded = false; onAddToHome() },
-        )
-        DropdownMenuItem(
-            text = { Text("Export") },
-            leadingIcon = { Icon(Icons.Filled.Upload, null) },
-            onClick = { menuExpanded = false; onExport() },
-        )
-        DropdownMenuItem(
-            text = { Text("Properties") },
-            leadingIcon = { Icon(Icons.Filled.Info, null) },
-            onClick = { menuExpanded = false; onProperties() },
-        )
     }
 }
 
