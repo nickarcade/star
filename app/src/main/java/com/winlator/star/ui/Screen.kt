@@ -24,7 +24,7 @@ sealed class Screen(val route: String, val label: String, val iconName: String) 
             listOf(Games, Containers, Settings, Appearance, InputControls, AdrenoTools, LsfgSettings, Saves)
         }
         val storeItems by lazy {
-            listOf(Gog, Epic, Amazon, Steam)
+            listOf(Steam, Epic, Gog)
         }
     }
 }
