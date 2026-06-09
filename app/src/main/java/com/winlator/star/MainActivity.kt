@@ -142,7 +142,7 @@ class MainActivity : AppCompatActivity() {
             editInputControls -> Screen.InputControls.route
             else -> {
                 val selectedMenuItemId = intent.getIntExtra("selected_menu_item_id", 0)
-                menuItemIdToRoute(selectedMenuItemId) ?: Screen.Shortcuts.route
+                menuItemIdToRoute(selectedMenuItemId) ?: Screen.Games.route
             }
         }
 
@@ -265,7 +265,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun menuItemIdToRoute(itemId: Int): String? = when (itemId) {
         R.id.main_menu_containers -> Screen.Containers.route
-        R.id.main_menu_shortcuts  -> Screen.Shortcuts.route
+        R.id.main_menu_shortcuts  -> Screen.Games.route
         R.id.main_menu_contents   -> Screen.Contents.route
         R.id.main_menu_input_controls -> Screen.InputControls.route
         R.id.main_menu_adrenotools_gpu_drivers -> Screen.AdrenoTools.route
