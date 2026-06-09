@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
+import android.view.View
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -297,24 +298,47 @@ private fun AppShell(
     val currentRoute = backstackEntry?.destination?.route ?: startRoute
 
     // Clear top bar actions on navigation so stale actions from a previous screen don't persist.
-    // Screens that need actions re-set them via SideEffect on each recomposition.
     androidx.compose.runtime.LaunchedEffect(currentRoute) {
         topBarActionsState.value = {}
     }
 
+    val isGamesRoute = currentRoute == Screen.Games.route
+    val isContainerDetail = currentRoute.startsWith("container_detail")
+
     val screenTitle = when {
-        currentRoute == Screen.Games.route -> ""
-        currentRoute.startsWith("container_detail") -> {
+        isGamesRoute -> ""
+        isContainerDetail -> {
             val id = backstackEntry?.arguments?.getInt("id") ?: -1
             if (id > 0) context.getString(R.string.edit_container) else context.getString(R.string.new_container)
         }
         else -> Screen.drawerItems.firstOrNull { it.route == currentRoute }?.label ?: "Winlator"
     }
 
+    // Fullscreen immersive sticky for Games screen
+    LaunchedEffect(isGamesRoute) {
+        if (isGamesRoute) {
+            val decor = (context as? androidx.activity.ComponentActivity)?.window?.decorView
+            decor?.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_FULLSCREEN
+            )
+        } else {
+            val decor = (context as? androidx.activity.ComponentActivity)?.window?.decorView
+            decor?.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+        }
+    }
+
+    val onOpenDrawer: () -> Unit = {
+        scope.launch {
+            if (drawerState.isOpen) drawerState.close() else drawerState.open()
+        }
+    }
+
     CompositionLocalProvider(LocalTopBarActions provides topBarActionsState) {
     ModalNavigationDrawer(
         drawerState = drawerState,
-        gesturesEnabled = !editInputControls && !currentRoute.startsWith("container_detail"),
+        gesturesEnabled = !editInputControls && !isContainerDetail,
         drawerContent = {
             AppDrawerContent(
                 currentRoute = currentRoute,
@@ -336,20 +360,20 @@ private fun AppShell(
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
-                AppTopBar(
-                    title = screenTitle,
-                    showBack = editInputControls,
-                    onNavClick = {
-                        if (editInputControls) {
-                            navController.popBackStack()
-                        } else {
-                            scope.launch {
-                                if (drawerState.isOpen) drawerState.close() else drawerState.open()
+                if (!isGamesRoute) {
+                    AppTopBar(
+                        title = screenTitle,
+                        showBack = editInputControls,
+                        onNavClick = {
+                            if (editInputControls) {
+                                navController.popBackStack()
+                            } else {
+                                onOpenDrawer()
                             }
-                        }
-                    },
-                    actions = topBarActionsState.value,
-                )
+                        },
+                        actions = topBarActionsState.value,
+                    )
+                }
             },
         ) { innerPadding ->
             AppNavGraph(
@@ -357,7 +381,8 @@ private fun AppShell(
                 selectedInputProfileId = selectedInputProfileId,
                 startRoute = startRoute,
                 onLaunchStore = onLaunchStore,
-                modifier = Modifier.padding(innerPadding),
+                onOpenDrawer = onOpenDrawer,
+                modifier = if (isGamesRoute) Modifier else Modifier.padding(innerPadding),
             )
         }
     }
