@@ -25,7 +25,7 @@ import com.winlator.star.ui.screens.LsfgSettingsScreen
 fun AppNavGraph(
     navController: NavHostController,
     selectedInputProfileId: Int,
-    startRoute: String = Screen.Containers.route,
+    startRoute: String = Screen.Shortcuts.route,
     modifier: Modifier = Modifier,
 ) {
     val activity = LocalContext.current as FragmentActivity

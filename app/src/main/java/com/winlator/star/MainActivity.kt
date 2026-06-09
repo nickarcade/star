@@ -142,7 +142,7 @@ class MainActivity : AppCompatActivity() {
             editInputControls -> Screen.InputControls.route
             else -> {
                 val selectedMenuItemId = intent.getIntExtra("selected_menu_item_id", 0)
-                menuItemIdToRoute(selectedMenuItemId) ?: Screen.Containers.route
+                menuItemIdToRoute(selectedMenuItemId) ?: Screen.Shortcuts.route
             }
         }
 
