@@ -101,6 +101,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
@@ -1508,7 +1509,7 @@ private val appGradient: Brush
 private fun GradientText(text: String, modifier: Modifier = Modifier, fontSize: TextUnit = 14.sp, fontWeight: FontWeight = FontWeight.Normal) {
     Text(
         text = text,
-        brush = appGradient,
+        style = TextStyle(brush = appGradient),
         fontSize = fontSize,
         fontWeight = fontWeight,
         modifier = modifier,
