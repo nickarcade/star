@@ -127,6 +127,9 @@ import com.winlator.star.fexcore.FEXCorePresetManager
 import com.winlator.star.inputcontrols.ControlsProfile
 import com.winlator.star.inputcontrols.InputControlsManager
 import com.winlator.star.midi.MidiManager
+import com.winlator.star.ui.Screen
+import com.winlator.star.ui.StorePill
+import com.winlator.star.ui.StoreTab
 import com.winlator.star.ui.theme.Divider as DividerColor
 import com.winlator.star.ui.theme.OnSurface
 import com.winlator.star.ui.theme.OnSurfaceVariant
@@ -147,7 +150,7 @@ import java.io.IOException
 import java.lang.reflect.Field
 
 @Composable
-fun ShortcutsScreen(vm: ShortcutsViewModel = viewModel()) {
+fun ShortcutsScreen(onLaunchStore: (Screen) -> Unit = {}, vm: ShortcutsViewModel = viewModel()) {
     val shortcuts by vm.shortcuts.collectAsState(initial = emptyList())
     val sortOrder by vm.sortOrder.collectAsState()
     val isGridView by vm.isGridView.collectAsState()
@@ -224,7 +227,22 @@ fun ShortcutsScreen(vm: ShortcutsViewModel = viewModel()) {
             }
         }
     }
+    var storeTab by remember { mutableStateOf(StoreTab.LOCAL) }
+
     Column(modifier = Modifier.fillMaxSize()) {
+        StorePill(
+            selectedTab = storeTab,
+            onSelect = { tab ->
+                storeTab = tab
+                when (tab) {
+                    StoreTab.STEAM -> onLaunchStore(Screen.Steam)
+                    StoreTab.EPIC -> onLaunchStore(Screen.Epic)
+                    StoreTab.GOG -> onLaunchStore(Screen.Gog)
+                    StoreTab.LOCAL -> {}
+                }
+            },
+        )
+        Spacer(modifier = Modifier.height(8.dp))
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             if (shortcuts.isEmpty()) {
                 Text(

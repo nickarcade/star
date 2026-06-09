@@ -26,6 +26,7 @@ fun AppNavGraph(
     navController: NavHostController,
     selectedInputProfileId: Int,
     startRoute: String = Screen.Games.route,
+    onLaunchStore: (Screen) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val activity = LocalContext.current as FragmentActivity
@@ -63,7 +64,7 @@ fun AppNavGraph(
         }
 
         composable(Screen.Games.route) {
-            ShortcutsScreen()
+            ShortcutsScreen(onLaunchStore = onLaunchStore)
         }
 
         composable(Screen.InputControls.route) {

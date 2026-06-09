@@ -329,6 +329,7 @@ private fun AppShell(
                     navController = navController,
                     selectedInputProfileId = selectedInputProfileId,
                     startRoute = startRoute,
+                    onLaunchStore = onLaunchStore,
                     modifier = Modifier.padding(innerPadding),
                 )
             }
