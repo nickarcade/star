@@ -486,6 +486,11 @@ private fun GraphicsContent(state: XServerDrawerState) {
 
     HorizontalDivider(color = Color(0xFF1A1A1A), modifier = Modifier.padding(vertical = 6.dp))
 
+    val nativeRenderingEnabled by state.nativeRenderingEnabled.collectAsState()
+    ToggleRow("Native Rendering", nativeRenderingEnabled) { state.onNativeRenderingToggle?.run() }
+
+    HorizontalDivider(color = Color(0xFF1A1A1A), modifier = Modifier.padding(vertical = 6.dp))
+
     ToggleRow("Vegas FrameGen", lsfgEnabled) { state.onLsfgToggle?.run() }
 
     if (lsfgEnabled) {

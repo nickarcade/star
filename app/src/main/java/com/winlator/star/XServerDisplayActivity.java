@@ -359,6 +359,10 @@ public class XServerDisplayActivity extends AppCompatActivity {
             boolean current = XServerDrawerState.INSTANCE.getLsfgEnabled();
             XServerDrawerState.INSTANCE.setLsfgEnabled(!current);
         };
+        state.onNativeRenderingToggle   = () -> {
+            boolean current = XServerDrawerState.INSTANCE.getNativeRenderingEnabled();
+            XServerDrawerState.INSTANCE.setNativeRenderingEnabled(!current);
+        };
         state.onApplyLsfg               = () -> {
             // LSFG settings changed - apply to the running environment
         };

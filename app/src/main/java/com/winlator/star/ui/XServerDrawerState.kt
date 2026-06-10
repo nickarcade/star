@@ -55,6 +55,9 @@ object XServerDrawerState {
     private val _lsfgGpuArch     = MutableStateFlow("auto")
     val lsfgGpuArch: StateFlow<String> = _lsfgGpuArch
 
+    private val _nativeRenderingEnabled = MutableStateFlow(false)
+    val nativeRenderingEnabled: StateFlow<Boolean> = _nativeRenderingEnabled
+
     private val _fpsExpanded = MutableStateFlow(false)
     val fpsExpanded: StateFlow<Boolean> = _fpsExpanded
 
@@ -84,6 +87,7 @@ object XServerDrawerState {
     @JvmField var onDisableMouse:           Runnable? = null
     @JvmField var onApplyLsfg:             Runnable? = null
     @JvmField var onResetLsfg:             Runnable? = null
+    @JvmField var onNativeRenderingToggle: Runnable? = null
     @JvmField var onFpsConfigApply: XServerDialogState.FpsConfigCallback? = null
     var onCursorExpandedChanged: ((Boolean) -> Unit)? = null
 
@@ -114,6 +118,9 @@ object XServerDrawerState {
         onCursorExpandedChanged?.invoke(next)
     }
 
+    fun setNativeRenderingEnabled(v: Boolean) { _nativeRenderingEnabled.value = v }
+    fun getNativeRenderingEnabled(): Boolean = _nativeRenderingEnabled.value
+
     fun setFpsExpanded(v: Boolean) { _fpsExpanded.value = v }
     fun setFpsConfig(v: String) { _fpsConfig.value = v }
     fun toggleFpsExpanded() { _fpsExpanded.value = !_fpsExpanded.value }
@@ -127,6 +134,7 @@ object XServerDrawerState {
         _showLogs.value = false
         _showMagnifier.value = true
         _lsfgEnabled.value = false
+        _nativeRenderingEnabled.value = false
         _lsfgMultiplier.value = 2
         _lsfgQuality.value = "balanced"
         _lsfgFlowScale.value = 100
@@ -141,7 +149,7 @@ object XServerDrawerState {
         onActiveWindows = null; onTaskManager = null; onMagnifier = null
         onLogs = null; onExit = null; onLsfgToggle = null; onMoveCursorToTouchpoint = null
         onRelativeMouseMovement = null; onDisableMouse = null
-        onApplyLsfg = null; onResetLsfg = null; onFpsConfigApply = null
+        onApplyLsfg = null; onResetLsfg = null; onNativeRenderingToggle = null; onFpsConfigApply = null
         onCursorExpandedChanged = null
     }
 }
