@@ -3,19 +3,21 @@ package com.winlator.star.ui.screens
 import android.app.Activity
 import android.content.Intent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import android.widget.Toast
 import androidx.compose.material.icons.filled.Add
@@ -28,17 +30,19 @@ import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Search
 import java.io.File
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -53,6 +57,8 @@ import androidx.compose.runtime.setValue
 import com.winlator.star.ui.LocalTopBarActions
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
@@ -69,9 +75,14 @@ import com.winlator.star.core.StringUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.winlator.star.ui.theme.Divider as DividerColor
+import com.winlator.star.ui.theme.GlowPurple
 import com.winlator.star.ui.theme.OnSurface
 import com.winlator.star.ui.theme.OnSurfaceVariant
-import com.winlator.star.ui.theme.Surface
+import com.winlator.star.ui.theme.Primary
+import com.winlator.star.ui.theme.PrimaryDim
+import com.winlator.star.ui.theme.Secondary
+import com.winlator.star.ui.theme.Surface as SurfaceColor
+import com.winlator.star.ui.theme.Tertiary
 import com.winlator.star.xenvironment.ImageFs
 
 @Composable
@@ -112,75 +123,177 @@ fun ContainersScreen(
         }
     }
     Column(modifier = Modifier.fillMaxSize()) {
-        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-        if (containers.isEmpty() && !isLoading) {
+        // ── Search bar ──
+        var searchQuery by remember { mutableStateOf("") }
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = { Text("Search containers\u2026", color = OnSurfaceVariant) },
+            leadingIcon = {
+                Icon(Icons.Filled.Search, contentDescription = null, tint = OnSurfaceVariant)
+            },
+            singleLine = true,
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = OnSurface,
+                unfocusedTextColor = OnSurface,
+                cursorColor = Primary,
+                focusedBorderColor = Primary.copy(alpha = 0.6f),
+                unfocusedBorderColor = DividerColor,
+                focusedContainerColor = SurfaceColor,
+                unfocusedContainerColor = SurfaceColor,
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        )
+
+        // ── Section header ──
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+        ) {
             Text(
-                text = "No containers yet. Tap + to create one.",
-                color = OnSurfaceVariant,
-                modifier = Modifier.align(Alignment.Center),
+                text = "CONTAINERS",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 2.sp,
+                color = GlowPurple,
             )
-        } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(containers, key = { it.id }) { container ->
-                    ContainerItem(
-                        container = container,
-                        onRun = {
-                            if (!XrActivity.isEnabled(context)) {
-                                val intent = Intent(context, XServerDisplayActivity::class.java)
-                                intent.putExtra("container_id", container.id)
-                                context.startActivity(intent)
-                            } else {
-                                XrActivity.openIntent(activity, container.id, null)
-                            }
-                        },
-                        onEdit = { onNavigateToDetail(container.id) },
-                        onDuplicate = {
-                            confirmDialog = ConfirmAction.Duplicate(container)
-                        },
-                        onRemove = {
-                            confirmDialog = ConfirmAction.Remove(container)
-                        },
-                        onExport = {
-                            vm.exportContainer(container) { path ->
-                                val msg = if (path != null)
-                                    "Exported to $path"
-                                else
-                                    "Export failed or already exists"
-                                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                            }
-                        },
-                        onInfo = { storageInfoContainer = container },
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = "${containers.size}",
+                fontSize = 11.sp,
+                color = OnSurfaceVariant,
+            )
+        }
+        // Gradient underline
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.25f)
+                .height(2.dp)
+                .padding(horizontal = 16.dp)
+                .background(
+                    Brush.horizontalGradient(listOf(GlowPurple, GlowPurple.copy(alpha = 0.1f))),
+                    RoundedCornerShape(1.dp)
+                )
+        )
+
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            val filtered = if (searchQuery.isBlank()) containers
+                           else containers.filter { it.name.contains(searchQuery, ignoreCase = true) }
+
+            if (filtered.isEmpty() && !isLoading) {
+                // ── VEGAS empty state ──
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.align(Alignment.Center).padding(32.dp),
+                ) {
+                    // Decorative circles
+                    Box(Modifier.size(80.dp), contentAlignment = Alignment.Center) {
+                        Box(
+                            Modifier
+                                .size(80.dp)
+                                .background(PrimaryDim.copy(alpha = 0.2f), RoundedCornerShape(40.dp))
+                        )
+                        Box(
+                            Modifier
+                                .size(56.dp)
+                                .background(Primary.copy(alpha = 0.15f), RoundedCornerShape(28.dp))
+                        )
+                        Icon(
+                            Icons.Filled.FolderOpen,
+                            contentDescription = null,
+                            tint = Primary.copy(alpha = 0.5f),
+                            modifier = Modifier.size(28.dp),
+                        )
+                    }
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        text = if (searchQuery.isNotBlank()) "No containers match \"$searchQuery\""
+                               else "Your library is empty",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = OnSurface,
                     )
-                    Divider(color = DividerColor)
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = if (searchQuery.isNotBlank()) "Try a different search term"
+                               else "Tap + to create your first container",
+                        fontSize = 13.sp,
+                        color = OnSurfaceVariant,
+                    )
+                }
+            } else if (!isLoading) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = 16.dp, end = 16.dp, top = 8.dp, bottom = 90.dp,
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    items(filtered, key = { it.id }) { container ->
+                        VegasContainerCard(
+                            container = container,
+                            onRun = {
+                                if (!XrActivity.isEnabled(context)) {
+                                    val intent = Intent(context, XServerDisplayActivity::class.java)
+                                    intent.putExtra("container_id", container.id)
+                                    context.startActivity(intent)
+                                } else {
+                                    XrActivity.openIntent(activity, container.id, null)
+                                }
+                            },
+                            onEdit = { onNavigateToDetail(container.id) },
+                            onDuplicate = {
+                                confirmDialog = ConfirmAction.Duplicate(container)
+                            },
+                            onRemove = {
+                                confirmDialog = ConfirmAction.Remove(container)
+                            },
+                            onExport = {
+                                vm.exportContainer(container) { path ->
+                                    val msg = if (path != null)
+                                        "Exported to $path"
+                                    else
+                                        "Export failed or already exists"
+                                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                }
+                            },
+                            onInfo = { storageInfoContainer = container },
+                        )
+                    }
                 }
             }
-        }
 
-        // FAB
-        FloatingActionButton(
-            onClick = {
-                if (ImageFs.find(context).isValid()) onNavigateToDetail(null)
-            },
-            containerColor = MaterialTheme.colorScheme.primary,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(20.dp),
-        ) {
-            Icon(imageVector = Icons.Filled.Add, contentDescription = "Add container", tint = androidx.compose.ui.graphics.Color.White)
-        }
-
-        // Loading overlay
-        if (isLoading) {
-            Box(
+            // FAB
+            FloatingActionButton(
+                onClick = {
+                    if (ImageFs.find(context).isValid()) onNavigateToDetail(null)
+                },
+                containerColor = Primary,
+                contentColor = Color.White,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.4f)),
-                contentAlignment = Alignment.Center,
+                    .align(Alignment.BottomEnd)
+                    .padding(20.dp),
             ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                Icon(imageVector = Icons.Filled.Add, contentDescription = "Add container")
             }
-        }
-        } // end inner Box(weight)
+
+            // Loading overlay
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(color = Primary)
+                }
+            }
+        } // end inner Box
     } // end Column
 
     // Import picker dialog
@@ -261,7 +374,7 @@ fun ContainersScreen(
 }
 
 @Composable
-private fun ContainerItem(
+private fun VegasContainerCard(
     container: Container,
     onRun: () -> Unit,
     onEdit: () -> Unit,
@@ -272,72 +385,151 @@ private fun ContainerItem(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Surface)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+    // Derive a consistent accent from container name
+    val cardAccent = remember(container.id) {
+        val colors = listOf(Primary, Secondary, GlowPurple, Tertiary)
+        colors[container.id % colors.size]
+    }
+
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        tonalElevation = 3.dp,
+        color = SurfaceColor,
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        Icon(
-            imageVector = Icons.Filled.FolderOpen,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(36.dp),
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = container.name,
-            style = MaterialTheme.typography.bodyLarge,
-            color = OnSurface,
-            modifier = Modifier.weight(1f),
-        )
-        // Run button
-        IconButton(onClick = onRun) {
-            Icon(
-                imageVector = Icons.Filled.PlayArrow,
-                contentDescription = "Run",
-                tint = MaterialTheme.colorScheme.primary,
+        Row(modifier = Modifier.fillMaxWidth()) {
+            // ── Left accent bar ──
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(76.dp)
+                    .background(
+                        Brush.verticalGradient(listOf(cardAccent, cardAccent.copy(alpha = 0.2f))),
+                        shape = RoundedCornerShape(topEnd = 0.dp, bottomEnd = 0.dp),
+                    )
             )
-        }
-        // 3-dot menu
-        Box {
-            IconButton(onClick = { menuExpanded = true }) {
-                Icon(
-                    imageVector = Icons.Filled.MoreVert,
-                    contentDescription = "Options",
-                    tint = OnSurfaceVariant,
-                )
-            }
-            DropdownMenu(
-                expanded = menuExpanded,
-                onDismissRequest = { menuExpanded = false },
+
+            // ── Main content ──
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 14.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
             ) {
-                DropdownMenuItem(
-                    text = { Text("Edit") },
-                    leadingIcon = { Icon(Icons.Filled.Edit, null) },
-                    onClick = { menuExpanded = false; onEdit() },
+                // Container name
+                Text(
+                    text = container.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = OnSurface,
+                    maxLines = 1,
                 )
-                DropdownMenuItem(
-                    text = { Text("Duplicate") },
-                    leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
-                    onClick = { menuExpanded = false; onDuplicate() },
+
+                Spacer(Modifier.height(2.dp))
+
+                // Subtitle: path or info
+                Text(
+                    text = container.getRootDir()?.name ?: "Local",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = OnSurfaceVariant,
+                    maxLines = 1,
                 )
-                DropdownMenuItem(
-                    text = { Text("Remove") },
-                    leadingIcon = { Icon(Icons.Filled.Delete, null) },
-                    onClick = { menuExpanded = false; onRemove() },
-                )
-                DropdownMenuItem(
-                    text = { Text("Export") },
-                    leadingIcon = { Icon(Icons.Filled.FileUpload, null) },
-                    onClick = { menuExpanded = false; onExport() },
-                )
-                DropdownMenuItem(
-                    text = { Text("Info") },
-                    leadingIcon = { Icon(Icons.Filled.Info, null) },
-                    onClick = { menuExpanded = false; onInfo() },
-                )
+
+                Spacer(Modifier.height(8.dp))
+
+                // Badge row
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    // DX wrapper badge
+                    val dxWrapper = container.dxWrapper
+                    if (dxWrapper.isNotBlank()) {
+                        val badgeColor = if (dxWrapper.contains("vegas", ignoreCase = true)) Primary
+                                         else OnSurfaceVariant
+                        Box(
+                            modifier = Modifier
+                                .background(badgeColor.copy(alpha = 0.15f), RoundedCornerShape(4.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                        ) {
+                            Text(
+                                text = if (dxWrapper.length > 12) dxWrapper.take(10) + "\u2026" else dxWrapper,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = badgeColor,
+                            )
+                        }
+                    }
+
+                    // Box64 indicator
+                    if (container.box64Preset != 0) {
+                        Box(
+                            modifier = Modifier
+                                .background(Tertiary.copy(alpha = 0.12f), RoundedCornerShape(4.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                        ) {
+                            Text(
+                                text = "\u26A0 Box64",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Tertiary,
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ── Actions column ──
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(end = 4.dp),
+            ) {
+                // Run button
+                IconButton(onClick = onRun) {
+                    Icon(
+                        imageVector = Icons.Filled.PlayArrow,
+                        contentDescription = "Run",
+                        tint = Primary,
+                        modifier = Modifier.size(28.dp),
+                    )
+                }
+                // 3-dot menu
+                Box {
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = "Options",
+                            tint = OnSurfaceVariant,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Edit") },
+                            leadingIcon = { Icon(Icons.Filled.Edit, null, tint = OnSurface) },
+                            onClick = { menuExpanded = false; onEdit() },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Duplicate") },
+                            leadingIcon = { Icon(Icons.Filled.ContentCopy, null, tint = OnSurface) },
+                            onClick = { menuExpanded = false; onDuplicate() },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Remove") },
+                            leadingIcon = { Icon(Icons.Filled.Delete, null, tint = OnSurface) },
+                            onClick = { menuExpanded = false; onRemove() },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Export") },
+                            leadingIcon = { Icon(Icons.Filled.FileUpload, null, tint = OnSurface) },
+                            onClick = { menuExpanded = false; onExport() },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Info") },
+                            leadingIcon = { Icon(Icons.Filled.Info, null, tint = OnSurface) },
+                            onClick = { menuExpanded = false; onInfo() },
+                        )
+                    }
+                }
             }
         }
     }
@@ -378,46 +570,49 @@ private fun StorageInfoDialog(container: Container, onDismiss: () -> Unit) {
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Storage Info") },
+        title = {
+            Text("Storage Info", fontWeight = FontWeight.Bold, color = OnSurface)
+        },
         text = {
             Row(
                 horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = androidx.compose.ui.Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 // Left column — Drive C / Cache / Total sizes
                 Column(
-                    modifier = androidx.compose.ui.Modifier.weight(1f),
+                    modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
-                    Text("Drive C", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(StringUtils.formatBytes(driveCSize), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = androidx.compose.ui.Modifier.size(6.dp))
-                    Text("Cache", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(StringUtils.formatBytes(cacheSize), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = androidx.compose.ui.Modifier.size(6.dp))
-                    Text("Total", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(StringUtils.formatBytes(totalSize), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text("Drive C", fontSize = 12.sp, color = OnSurfaceVariant)
+                    Text(StringUtils.formatBytes(driveCSize), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Primary)
+                    Spacer(modifier = Modifier.size(6.dp))
+                    Text("Cache", fontSize = 12.sp, color = OnSurfaceVariant)
+                    Text(StringUtils.formatBytes(cacheSize), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Primary)
+                    Spacer(modifier = Modifier.size(6.dp))
+                    Text("Total", fontSize = 12.sp, color = OnSurfaceVariant)
+                    Text(StringUtils.formatBytes(totalSize), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Primary)
                 }
                 // Right column — circular progress + label
                 Column(
-                    modifier = androidx.compose.ui.Modifier.weight(1f),
+                    modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(
                             progress = { progress / 100f },
-                            modifier = androidx.compose.ui.Modifier.size(100.dp),
+                            modifier = Modifier.size(100.dp),
                             strokeWidth = 10.dp,
                             trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                            color = Primary,
                         )
-                        Text("${progress.toInt()}%", fontSize = 16.sp)
+                        Text("${progress.toInt()}%", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = OnSurface)
                     }
-                    Spacer(modifier = androidx.compose.ui.Modifier.size(6.dp))
+                    Spacer(modifier = Modifier.size(6.dp))
                     Text(
                         "Estimated used space",
                         fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = OnSurfaceVariant,
                     )
                 }
             }
@@ -429,7 +624,7 @@ private fun StorageInfoDialog(container: Container, onDismiss: () -> Unit) {
                 container.putExtra("desktopTheme", null)
                 container.saveData()
                 onDismiss()
-            }) { Text("Clear Cache") }
+            }) { Text("Clear Cache", color = Primary) }
         },
     )
 }

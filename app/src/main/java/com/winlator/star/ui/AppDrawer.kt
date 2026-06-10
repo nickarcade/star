@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FolderOpen
@@ -41,13 +43,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.winlator.star.R
 import com.winlator.star.ui.theme.Divider as DividerColor
+import com.winlator.star.ui.theme.GlowPurple
+import com.winlator.star.ui.theme.Primary
+import com.winlator.star.ui.theme.Secondary
 
 private fun iconFor(screen: Screen): ImageVector = when (screen) {
     Screen.Containers    -> Icons.Filled.FolderOpen
@@ -88,24 +95,55 @@ fun AppDrawerContent(
             .background(MaterialTheme.colorScheme.surface)
             .verticalScroll(rememberScrollState()),
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        // ── VEGAS Branded Header ──
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.background)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Primary.copy(alpha = 0.12f),
+                            MaterialTheme.colorScheme.background,
+                        )
+                    )
+                )
                 .padding(horizontal = 20.dp, vertical = 20.dp),
         ) {
-            Image(
-                painter = painterResource(R.mipmap.ic_launcher_foreground),
-                contentDescription = null,
-                modifier = Modifier.size(48.dp),
-            )
-            Spacer(Modifier.width(12.dp))
-            Text(
-                text = "Star Bionic",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.White,
-            )
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = painterResource(R.mipmap.ic_launcher_foreground),
+                        contentDescription = null,
+                        modifier = Modifier.size(44.dp),
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "Star Bionic",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.White,
+                        )
+                        Text(
+                            text = "POWERED BY VEGAS",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 2.sp,
+                            brush = Brush.linearGradient(listOf(Primary, Secondary)),
+                        )
+                    }
+                }
+                // Glow underline
+                Spacer(Modifier.height(10.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.3f)
+                        .height(2.dp)
+                        .background(
+                            Brush.horizontalGradient(listOf(GlowPurple, GlowPurple.copy(alpha = 0.1f))),
+                            RoundedCornerShape(1.dp)
+                        )
+                )
+            }
         }
 
         Divider(color = DividerColor)
@@ -151,9 +189,11 @@ fun AppDrawerContent(
 @Composable
 private fun SectionHeader(title: String) {
     Text(
-        text = title,
+        text = title.uppercase(),
         style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 1.5.sp,
+        color = GlowPurple.copy(alpha = 0.7f),
         modifier = Modifier.padding(start = 20.dp, top = 14.dp, bottom = 4.dp),
     )
 }
@@ -166,20 +206,39 @@ private fun DrawerItem(screen: Screen, currentRoute: String, onNavigate: (Screen
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onNavigate(screen) }
-            .background(if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent)
-            .padding(horizontal = 20.dp, vertical = 13.dp),
+            .background(
+                if (selected) Primary.copy(alpha = 0.10f)
+                else Color.Transparent
+            )
+            .padding(start = 0.dp, end = 20.dp, top = 13.dp, bottom = 13.dp),
     ) {
+        // Left accent bar for selected item
+        if (selected) {
+            Box(
+                modifier = Modifier
+                    .width(3.dp)
+                    .height(24.dp)
+                    .background(
+                        Brush.verticalGradient(listOf(Primary, Secondary)),
+                        RoundedCornerShape(topEnd = 2.dp, bottomEnd = 2.dp),
+                    )
+            )
+        } else {
+            Spacer(Modifier.width(3.dp))
+        }
+        Spacer(Modifier.width(17.dp))
         Icon(
             imageVector = iconFor(screen),
             contentDescription = null,
-            tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = if (selected) Primary else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(22.dp),
         )
         Spacer(Modifier.width(16.dp))
         Text(
             text = screen.label,
             style = MaterialTheme.typography.bodyLarge,
-            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (selected) Primary else MaterialTheme.colorScheme.onSurface,
         )
     }
 }
