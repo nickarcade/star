@@ -488,7 +488,7 @@ public Container(int id) {
             data.put("fexcoreVersion", fexcoreVersion);
             data.put("box64Preset", box64Preset);
             data.put("desktopTheme", desktopTheme);
-            data.put("extraData", extraData);
+            if (extraData != null) data.put("extraData", extraData);
             data.put("midiSoundFont", midiSoundFont);
             data.put("lc_all", lc_all);
             data.put("primaryController", primaryController);

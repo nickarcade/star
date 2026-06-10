@@ -2,9 +2,13 @@ package com.winlator.star.ui
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FolderOpen
@@ -30,7 +35,7 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Storefront
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -41,13 +46,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.winlator.star.R
-import com.winlator.star.ui.theme.Divider as DividerColor
+
+private val PureBlack = Color(0xFF000000)
+private val DarkSurface = Color(0xFF0D0D0D)
+private val DimWhite = Color(0xFFE8E8E8)
+private val MutedWhite = Color(0xFF999999)
+private val GlowPurple = Color(0xFFBB86FC)
+private val PrimaryDim = Color(0xFF482880)
 
 private fun iconFor(screen: Screen): ImageVector = when (screen) {
     Screen.Containers    -> Icons.Filled.FolderOpen
@@ -85,14 +99,14 @@ fun AppDrawerContent(
         modifier = Modifier
             .fillMaxHeight()
             .width(280.dp)
-            .background(MaterialTheme.colorScheme.surface)
+            .background(PureBlack)
             .verticalScroll(rememberScrollState()),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.background)
+                .background(PureBlack)
                 .padding(horizontal = 20.dp, vertical = 20.dp),
         ) {
             Image(
@@ -104,35 +118,46 @@ fun AppDrawerContent(
             Text(
                 text = "Star Bionic",
                 style = MaterialTheme.typography.titleMedium,
-                color = Color.White,
+                color = DimWhite,
             )
         }
 
-        Divider(color = DividerColor)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.4f)
+                .padding(start = 20.dp)
+                .height(2.dp)
+                .background(
+                    Brush.horizontalGradient(listOf(GlowPurple, GlowPurple.copy(alpha = 0.1f))),
+                    RoundedCornerShape(1.dp)
+                )
+        )
 
-        SectionHeader("Emulation")
+        Spacer(Modifier.height(4.dp))
+
+        DrawerSection("Emulation")
         DrawerItem(Screen.Games,         currentRoute, onNavigate)
         DrawerItem(Screen.Containers,    currentRoute, onNavigate)
         DrawerItem(Screen.Settings,      currentRoute, onNavigate)
 
-        Divider(color = DividerColor, modifier = Modifier.padding(top = 4.dp))
+        HorizontalDivider(color = Color(0xFF1A1A1A), modifier = Modifier.padding(vertical = 6.dp, start = 20.dp, end = 20.dp))
 
-        SectionHeader("Tools")
+        DrawerSection("Tools")
         DrawerItem(Screen.InputControls, currentRoute, onNavigate)
         DrawerItem(Screen.AdrenoTools,   currentRoute, onNavigate)
         DrawerItem(Screen.Saves,         currentRoute, onNavigate)
         DrawerItem(Screen.LsfgSettings,  currentRoute, onNavigate)
 
-        Divider(color = DividerColor, modifier = Modifier.padding(top = 4.dp))
+        HorizontalDivider(color = Color(0xFF1A1A1A), modifier = Modifier.padding(vertical = 6.dp, start = 20.dp, end = 20.dp))
 
-        SectionHeader("Game Stores")
+        DrawerSection("Game Stores")
         Screen.storeItems.forEach { screen ->
             DrawerStoreItem(screen, onLaunchStore)
         }
 
-        Divider(color = DividerColor, modifier = Modifier.padding(top = 4.dp))
+        HorizontalDivider(color = Color(0xFF1A1A1A), modifier = Modifier.padding(vertical = 6.dp, start = 20.dp, end = 20.dp))
 
-        SectionHeader("About And Support")
+        DrawerSection("About And Support")
         DrawerIconItem(
             label = "About",
             icon = Icons.Filled.Info,
@@ -149,38 +174,73 @@ fun AppDrawerContent(
 }
 
 @Composable
-private fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(start = 20.dp, top = 14.dp, bottom = 4.dp),
-    )
+private fun DrawerSection(title: String) {
+    Column(modifier = Modifier.padding(start = 20.dp, top = 10.dp, bottom = 6.dp)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold),
+            color = DimWhite,
+        )
+        Spacer(Modifier.height(6.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.3f)
+                .height(2.dp)
+                .background(
+                    Brush.horizontalGradient(listOf(GlowPurple, GlowPurple.copy(alpha = 0.1f))),
+                    RoundedCornerShape(1.dp)
+                )
+        )
+    }
 }
 
 @Composable
 private fun DrawerItem(screen: Screen, currentRoute: String, onNavigate: (Screen) -> Unit) {
     val selected = currentRoute == screen.route
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
+    val bgBrush = if (selected)
+        Brush.verticalGradient(listOf(PrimaryDim, GlowPurple.copy(alpha = 0.3f)))
+    else
+        Brush.verticalGradient(listOf(Color.Transparent, Color.Transparent))
+    val borderColor = if (selected) GlowPurple.copy(alpha = 0.6f) else Color.Transparent
+    val contentColor = if (selected) Color.White else DimWhite
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onNavigate(screen) }
-            .background(if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent)
-            .padding(horizontal = 20.dp, vertical = 13.dp),
+            .padding(horizontal = 14.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(bgBrush, RoundedCornerShape(10.dp))
+            .border(1.5.dp, borderColor, RoundedCornerShape(10.dp))
+            .clickable { onNavigate(screen) },
     ) {
-        Icon(
-            imageVector = iconFor(screen),
-            contentDescription = null,
-            tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(22.dp),
-        )
-        Spacer(Modifier.width(16.dp))
-        Text(
-            text = screen.label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-        )
+        if (selected) {
+            Canvas(Modifier.matchParentSize()) {
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(GlowPurple.copy(alpha = 0.15f), Color.Transparent),
+                        radius = size.minDimension / 2f
+                    ),
+                    radius = size.minDimension / 2f
+                )
+            }
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp),
+        ) {
+            Icon(
+                imageVector = iconFor(screen),
+                contentDescription = null,
+                tint = if (selected) Color.White else MutedWhite,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(Modifier.width(14.dp))
+            Text(
+                text = screen.label,
+                style = MaterialTheme.typography.bodyLarge,
+                color = contentColor,
+            )
+        }
     }
 }
 
@@ -191,19 +251,19 @@ private fun DrawerStoreItem(screen: Screen, onLaunchStore: (Screen) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onLaunchStore(screen) }
-            .padding(horizontal = 20.dp, vertical = 13.dp),
+            .padding(horizontal = 20.dp, vertical = 12.dp),
     ) {
         Icon(
             imageVector = Icons.Filled.Storefront,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(22.dp),
+            tint = MutedWhite,
+            modifier = Modifier.size(20.dp),
         )
-        Spacer(Modifier.width(16.dp))
+        Spacer(Modifier.width(14.dp))
         Text(
             text = screen.label,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = MutedWhite,
         )
     }
 }
@@ -215,19 +275,19 @@ private fun DrawerIconItem(label: String, icon: ImageVector, onClick: () -> Unit
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 13.dp),
+            .padding(horizontal = 20.dp, vertical = 12.dp),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(22.dp),
+            tint = MutedWhite,
+            modifier = Modifier.size(20.dp),
         )
-        Spacer(Modifier.width(16.dp))
+        Spacer(Modifier.width(14.dp))
         Text(
             text = label,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = DimWhite,
         )
     }
 }
@@ -238,9 +298,7 @@ private fun HelpSupportDialog(onDismiss: () -> Unit, onOpenUrl: (String) -> Unit
         onDismissRequest = onDismiss,
         title = { Text("Help & Support") },
         text = {
-            androidx.compose.foundation.layout.Column(
-                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     "For bug reports, feature requests, and support, visit the GitHub repository.",
                     color = MaterialTheme.colorScheme.onSurface
@@ -275,14 +333,14 @@ private fun SupportLink(label: String, url: String, onOpenUrl: (String) -> Unit)
         Icon(
             imageVector = Icons.Filled.OpenInNew,
             contentDescription = null,
-            tint = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+            tint = GlowPurple,
             modifier = Modifier.size(16.dp)
         )
         Spacer(Modifier.width(8.dp))
         Text(
             text = label,
-            color = androidx.compose.material3.MaterialTheme.colorScheme.primary,
-            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+            color = GlowPurple,
+            style = MaterialTheme.typography.bodyMedium
         )
     }
 }
