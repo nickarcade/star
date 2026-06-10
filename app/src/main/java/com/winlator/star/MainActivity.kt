@@ -39,6 +39,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -308,7 +309,7 @@ private fun AppShell(
 
     // Clear top bar actions on navigation so stale actions from a previous screen don't persist.
     // Screens that need actions re-set them via SideEffect on each recomposition.
-    androidx.compose.runtime.LaunchedEffect(currentRoute) {
+    LaunchedEffect(currentRoute) {
         topBarActionsState.value = {}
     }
 
