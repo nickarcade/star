@@ -13,18 +13,24 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -39,7 +45,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,6 +80,12 @@ import com.winlator.star.ui.Screen
 import com.winlator.star.ui.screens.SplashScreen
 import com.winlator.star.ui.screens.SplashViewModel
 import com.winlator.star.ui.theme.AppThemeState
+import com.winlator.star.ui.theme.Divider as ThemeDivider
+import com.winlator.star.ui.theme.OnSurface
+import com.winlator.star.ui.theme.OnSurfaceVariant
+import com.winlator.star.ui.theme.Primary
+import com.winlator.star.ui.theme.Secondary
+import com.winlator.star.ui.theme.Surface as ThemeSurface
 import com.winlator.star.ui.theme.WinlatorTheme
 import kotlinx.coroutines.launch
 import java.io.File
@@ -397,67 +408,132 @@ private fun AllFilesAccessDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
 private fun AboutDialog(onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = androidx.compose.material3.MaterialTheme.colorScheme.surface,
-            modifier = androidx.compose.ui.Modifier.fillMaxWidth()
+            shape = RoundedCornerShape(20.dp),
+            color = ThemeSurface,
+            tonalElevation = 4.dp,
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Column(
-                modifier = androidx.compose.ui.Modifier
+                modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(24.dp),
-                horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                // Logo + name
-                Image(
-                    painter = painterResource(R.mipmap.ic_launcher_foreground),
-                    contentDescription = null,
-                    modifier = androidx.compose.ui.Modifier.size(72.dp)
-                )
-                Text(
-                    text = "Star Bionic",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "v1.3-vegas",
-                    fontSize = 13.sp,
-                    color = com.winlator.star.ui.theme.OnSurfaceVariant
+                // ── Gradient header strip ──
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .background(
+                            brush = Brush.horizontalGradient(listOf(Primary, Secondary))
+                        )
                 )
 
-                Spacer(androidx.compose.ui.Modifier.height(4.dp))
-                Divider(color = com.winlator.star.ui.theme.Divider)
-                Spacer(androidx.compose.ui.Modifier.height(4.dp))
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    // VEGAS "V" logo
+                    val vegasGradient = Brush.linearGradient(
+                        colors = listOf(Primary, Secondary),
+                    )
+                    Canvas(modifier = Modifier.size(64.dp)) {
+                        val strokeW = size.minDimension * 0.18f
+                        val leftX   = size.width * 0.20f
+                        val rightX  = size.width * 0.80f
+                        val topY    = size.height * 0.15f
+                        val bottomY = size.height * 0.85f
+                        val cx      = size.width / 2f
 
-                // Powered by
-                AboutSection(title = "Powered By") {
-                    AboutRow("Wine",    "Windows compatibility layer")
-                    AboutRow("Box64",   "x86_64 emulation on ARM")
-                    AboutRow("FEX-Emu", "Fast x86 emulator")
-                    AboutRow("Turnip",  "Open-source Vulkan driver")
+                        drawLine(
+                            brush   = vegasGradient,
+                            start   = Offset(leftX, topY),
+                            end     = Offset(cx, bottomY),
+                            strokeWidth = strokeW,
+                            cap     = StrokeCap.Round,
+                        )
+                        drawLine(
+                            brush   = vegasGradient,
+                            start   = Offset(rightX, topY),
+                            end     = Offset(cx, bottomY),
+                            strokeWidth = strokeW,
+                            cap     = StrokeCap.Round,
+                        )
+                        // Decorative dot at apex
+                        drawCircle(
+                            color  = Secondary,
+                            radius = strokeW * 0.30f,
+                            center = Offset(cx, bottomY),
+                        )
+                    }
+
+                    // Title
+                    Text(
+                        text = "STAR EMULATOR",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Primary,
+                        letterSpacing = 3.sp,
+                    )
+
+                    // VEGAS badge
+                    Surface(
+                        color = Primary,
+                        shape = RoundedCornerShape(4.dp),
+                    ) {
+                        Text(
+                            text = "POWERED BY VEGAS",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF0D0015),
+                            letterSpacing = 1.sp,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        )
+                    }
+
+                    Text(
+                        text = "v1.3-vegas",
+                        fontSize = 13.sp,
+                        color = OnSurfaceVariant,
+                    )
+
+                    Spacer(Modifier.height(4.dp))
+                    Divider(color = ThemeDivider)
+                    Spacer(Modifier.height(4.dp))
+
+                    // Powered by
+                    AboutSection(title = "Powered By") {
+                        AboutRow("Wine",    "Windows compatibility layer")
+                        AboutRow("Box64",   "x86_64 emulation on ARM")
+                        AboutRow("FEX-Emu", "Fast x86 emulator")
+                        AboutRow("Turnip",  "Open-source Vulkan driver")
+                        AboutRow("VEGAS",   "D3D9/11 → Vulkan translation")
+                    }
+
+                    Spacer(Modifier.height(4.dp))
+                    Divider(color = ThemeDivider)
+                    Spacer(Modifier.height(4.dp))
+
+                    // Credits
+                    AboutSection(title = "Credits") {
+                        AboutRow("brunodev85",      "Winlator — original project")
+                        AboutRow("MishaMixXx",      "Winlator Bionic")
+                        AboutRow("The412Banner",    "Star-Compose / Star Bionic")
+                        AboutRow("ptitSeb",         "Box64")
+                        AboutRow("WineHQ",          "Wine project")
+                        AboutRow("Mesa / Freedreno","Turnip Vulkan driver")
+                        AboutRow("VEGAS Team",      "DXVK fork for Android")
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text("Close", color = OnSurfaceVariant)
+                    }
                 }
-
-                Spacer(androidx.compose.ui.Modifier.height(4.dp))
-                Divider(color = com.winlator.star.ui.theme.Divider)
-                Spacer(androidx.compose.ui.Modifier.height(4.dp))
-
-                // Credits
-                AboutSection(title = "Credits") {
-                    AboutRow("brunodev85",      "Winlator — original project")
-                    AboutRow("MishaMixXx",      "Winlator Bionic")
-                    AboutRow("The412Banner",    "Star-Compose / Star Bionic")
-                    AboutRow("ptitSeb",         "Box64")
-                    AboutRow("WineHQ",          "Wine project")
-                    AboutRow("Mesa / Freedreno","Turnip Vulkan driver")
-                }
-
-                Spacer(androidx.compose.ui.Modifier.height(8.dp))
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = androidx.compose.ui.Modifier.fillMaxWidth()
-                ) { Text("Close") }
             }
         }
     }
@@ -465,13 +541,14 @@ private fun AboutDialog(onDismiss: () -> Unit) {
 
 @Composable
 private fun AboutSection(title: String, content: @Composable () -> Unit) {
-    Column(modifier = androidx.compose.ui.Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = title,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = androidx.compose.material3.MaterialTheme.colorScheme.primary,
-            modifier = androidx.compose.ui.Modifier.padding(bottom = 2.dp)
+            color = Primary,
+            letterSpacing = 1.sp,
+            modifier = Modifier.padding(bottom = 2.dp),
         )
         content()
     }
@@ -480,11 +557,20 @@ private fun AboutSection(title: String, content: @Composable () -> Unit) {
 @Composable
 private fun AboutRow(name: String, description: String) {
     Row(
-        modifier = androidx.compose.ui.Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(text = name, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface)
-        Spacer(androidx.compose.ui.Modifier.width(8.dp))
-        Text(text = description, fontSize = 12.sp, color = com.winlator.star.ui.theme.OnSurfaceVariant)
+        Text(
+            text = name,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            color = OnSurface,
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = description,
+            fontSize = 12.sp,
+            color = OnSurfaceVariant,
+        )
     }
 }

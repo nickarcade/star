@@ -165,4 +165,5 @@ val themePresets: List<ThemePreset> = listOf(
     ),
 )
 
+val VEGAS_PRESET_INDEX = 7
 val CUSTOM_PRESET_INDEX = themePresets.size - 1

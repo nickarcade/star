@@ -25,8 +25,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -53,6 +52,9 @@ import com.winlator.star.ui.theme.CUSTOM_PRESET_INDEX
 import com.winlator.star.ui.theme.Divider
 import com.winlator.star.ui.theme.OnSurface
 import com.winlator.star.ui.theme.OnSurfaceVariant
+import com.winlator.star.ui.theme.Primary
+import com.winlator.star.ui.theme.Secondary
+import com.winlator.star.ui.theme.VEGAS_PRESET_INDEX
 import com.winlator.star.ui.theme.themePresets
 
 @Composable
@@ -122,6 +124,9 @@ private fun PresetSwatch(
     modifier: Modifier = Modifier
 ) {
     val accent = if (isCustomSlot) customAccent else preset.primary
+    val index = themePresets.indexOf(preset)
+    val isVegas = index == VEGAS_PRESET_INDEX
+
     Column(
         modifier = modifier.clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -132,10 +137,20 @@ private fun PresetSwatch(
                 .size(56.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .background(preset.background)
-                .border(
-                    width = if (isSelected) 2.dp else 1.dp,
-                    color = if (isSelected) MaterialTheme.colorScheme.primary else Divider,
-                    shape = RoundedCornerShape(12.dp)
+                .then(
+                    if (isSelected && isVegas) {
+                        Modifier.border(
+                            width = 2.dp,
+                            brush = Brush.horizontalGradient(listOf(Primary, Secondary)),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                    } else {
+                        Modifier.border(
+                            width = if (isSelected) 2.dp else 1.dp,
+                            color = if (isSelected) Primary else Divider,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                    }
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -162,10 +177,26 @@ private fun PresetSwatch(
                     )
                 }
             }
+            // VEGAS badge on top-right corner
+            if (isVegas) {
+                Surface(
+                    color = Primary,
+                    shape = RoundedCornerShape(topEnd = 10.dp, bottomStart = 4.dp),
+                    modifier = Modifier.align(Alignment.TopEnd),
+                ) {
+                    Text(
+                        text = "V",
+                        fontSize = 7.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFF0D0015),
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                    )
+                }
+            }
         }
         Text(
             text = preset.name,
-            color = if (isSelected) MaterialTheme.colorScheme.primary else OnSurfaceVariant,
+            color = if (isSelected) Primary else OnSurfaceVariant,
             fontSize = 10.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
             maxLines = 1
