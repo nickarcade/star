@@ -367,7 +367,7 @@ private fun InfoField(label: String, value: String) {
 
 // ── Per-type icon ──────────────────────────────────────────────────────────────
 
-private fun typeIcon(type: ContentProfile.ContentType): ImageVector = when (type) {
+internal fun typeIcon(type: ContentProfile.ContentType): ImageVector = when (type) {
     ContentProfile.ContentType.CONTENT_TYPE_WINE     -> Icons.Filled.WineBar
     ContentProfile.ContentType.CONTENT_TYPE_DXVK     -> Icons.Filled.Memory
     ContentProfile.ContentType.CONTENT_TYPE_VKD3D    -> Icons.Filled.Memory
