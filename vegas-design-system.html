@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VEGAS UI Design System — Star Emulator</title>
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+    background: #0D0015;
+    color: #E8E8E8;
+    line-height: 1.5;
+  }
+
+  /* ── VEGAS Design Tokens ── */
+  :root {
+    --primary: #D946EF;
+    --primary-dim: #701A75;
+    --primary-variant: #C026D3;
+    --secondary: #22D3EE;
+    --secondary-dim: #0E7490;
+    --tertiary: #FBBF24;
+    --glow-purple: #C084FC;
+    --surface: #1A0A2E;
+    --surface-variant: #2A1540;
+    --background: #0D0015;
+    --on-surface: #E8E8E8;
+    --on-surface-variant: #AAAAAA;
+    --divider: #3A1A5E;
+    --outline: #5A2A7E;
+
+    /* Card dimensions */
+    --card-radius: 14px;
+    --card-elevation: 3px;
+  }
+
+  /* ── Layout ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+
+  /* ── Typography ── */
+  h1, h2, h3 { font-weight: 700; letter-spacing: 0.02em; }
+  h1 { font-size: 42px; }
+  h2 {
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--primary);
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  h2::after {
+    content: '';
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg, var(--primary), transparent);
+  }
+  h3 { font-size: 14px; color: var(--on-surface); margin-bottom: 10px; }
+  .section { margin-bottom: 60px; }
+
+  /* ── VEGAS Gradient Text ── */
+  .gradient-text {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Color Swatches ── */
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 12px;
+  }
+  .swatch {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; padding: 16px 8px;
+    background: var(--surface);
+    border-radius: var(--card-radius);
+    border: 1px solid var(--divider);
+  }
+  .swatch-circle {
+    width: 48px; height: 48px; border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .swatch-label { font-size: 11px; color: var(--on-surface-variant); text-align: center; }
+  .swatch-hex { font-size: 10px; color: var(--on-surface-variant); opacity: 0.7; font-family: monospace; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border-radius: var(--card-radius);
+    border: 1px solid var(--divider);
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+  .card:hover { box-shadow: 0 4px 20px rgba(217, 70, 239, 0.1); }
+
+  /* ── Component Showcase ── */
+  .component-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+  }
+
+  /* ── Accent Bar Pattern ── */
+  .accent-card {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface);
+    border-radius: var(--card-radius);
+    padding: 12px 14px;
+    border: 1px solid var(--divider);
+    position: relative;
+    overflow: hidden;
+  }
+  .accent-bar {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+    border-radius: 0 2px 2px 0;
+  }
+  .accent-bar.magenta { background: var(--primary); }
+  .accent-bar.cyan { background: var(--secondary); }
+  .accent-bar.lavender { background: var(--glow-purple); }
+  .accent-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; margin-left: 6px; }
+  .accent-icon svg { width: 22px; height: 22px; }
+  .accent-content { flex: 1; }
+  .accent-title { font-size: 13px; font-weight: 600; color: var(--on-surface); }
+  .accent-sub { font-size: 11px; color: var(--on-surface-variant); margin-top: 2px; }
+  .accent-action { display: flex; align-items: center; gap: 4px; }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: 4px;
+    font-size: 9px; font-weight: 800; letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .badge-latest { background: rgba(251, 191, 36, 0.15); color: var(--tertiary); }
+  .badge-recommended { background: rgba(34, 211, 238, 0.15); color: var(--secondary); }
+  .badge-installed { background: rgba(217, 70, 239, 0.12); color: var(--primary); }
+
+  /* ── Preset Swatch ── */
+  .preset-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    max-width: 480px;
+  }
+  .preset-swatch {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    cursor: pointer;
+  }
+  .preset-box {
+    width: 64px; height: 64px;
+    border-radius: 12px;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .preset-box.selected { border: 2px solid var(--primary); }
+  .preset-box.vegas-highlight { border: 2px solid transparent; background-clip: padding-box; }
+  .preset-box.vegas-highlight::before {
+    content: ''; position: absolute; inset: -2px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    z-index: -1;
+  }
+  .preset-box.vegas-highlight .vegas-v-badge {
+    position: absolute; top: 0; right: 0;
+    background: var(--primary); color: #0D0015;
+    font-size: 8px; font-weight: 900; line-height: 1;
+    padding: 2px 5px 2px 6px;
+    border-radius: 0 10px 0 4px;
+  }
+  .preset-ui {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 5px;
+    width: 100%;
+  }
+  .preset-ui .bar { border-radius: 2px; }
+  .preset-ui .bar-full { height: 8px; }
+  .preset-ui .bar-accent { width: 60%; height: 4px; }
+  .preset-ui .bar-sub { width: 100%; height: 3px; }
+  .preset-ui .bar-sub2 { width: 50%; height: 3px; }
+
+  .preset-name {
+    font-size: 10px; text-align: center;
+    color: var(--on-surface-variant); font-weight: 400;
+  }
+  .preset-name.selected { color: var(--primary); font-weight: 700; }
+
+  /* ── Selection overlay ── */
+  .preset-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.35);
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 10px;
+  }
+  .preset-overlay svg { width: 20px; height: 20px; fill: white; }
+
+  /* ── Button ── */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 10px 24px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; letter-spacing: 0.5px;
+    border: none; cursor: pointer; text-decoration: none;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary { background: var(--primary); color: #0D0015; }
+  .btn-ghost { background: transparent; color: var(--primary); border: 1px solid var(--divider); }
+  .btn-close { background: transparent; color: var(--on-surface-variant); padding: 8px 12px; font-size: 12px; }
+
+  /* ── Dialog Preview ── */
+  .dialog-mock {
+    background: var(--surface);
+    border-radius: 20px;
+    border: 1px solid var(--divider);
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    max-width: 480px;
+  }
+  .dialog-header-strip {
+    height: 6px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+  }
+  .dialog-body { padding: 24px; }
+  .dialog-centered { text-align: center; }
+
+  .dialog-v-logo {
+    width: 64px; height: 60px;
+    margin: 0 auto 12px;
+    position: relative;
+  }
+  .dialog-v-logo svg { width: 100%; height: 100%; }
+  .dialog-title { font-size: 18px; font-weight: 700; letter-spacing: 3px; color: var(--primary); }
+  .dialog-badge {
+    display: inline-block;
+    background: var(--primary); color: #0D0015;
+    font-size: 9px; font-weight: 800; letter-spacing: 1px;
+    padding: 3px 10px; border-radius: 4px;
+    margin-top: 8px;
+  }
+  .dialog-version { font-size: 13px; color: var(--on-surface-variant); margin-top: 4px; }
+  .dialog-line {
+    height: 1px; background: var(--divider);
+    margin: 12px 0;
+  }
+  .dialog-section-title {
+    font-size: 12px; font-weight: 600; color: var(--primary);
+    letter-spacing: 1px; margin-bottom: 6px;
+  }
+  .dialog-credits {
+    display: flex; justify-content: space-between;
+    font-size: 13px; padding: 3px 0;
+  }
+  .dialog-credits .name { font-weight: 500; color: var(--on-surface); }
+  .dialog-credits .desc { font-size: 12px; color: var(--on-surface-variant); }
+
+  /* ── Splash Preview ── */
+  .splash-mock {
+    width: 360px; height: 640px;
+    background: #0A0012;
+    border-radius: 24px;
+    border: 1px solid var(--divider);
+    position: relative;
+    overflow: hidden;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 48px;
+  }
+  .splash-glow {
+    position: absolute;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(217,70,239,0.15), transparent 70%);
+    top: 50%; left: 50%; transform: translate(-50%, -65%);
+  }
+  .splash-logo-area {
+    width: 120px; height: 120px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    animation: breathe 3s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
+  .splash-logo-area svg { width: 90px; height: 80px; }
+  .splash-wordmark {
+    font-size: 32px; font-weight: 900; letter-spacing: 6px;
+    margin-top: 8px;
+  }
+  .splash-subtitle {
+    font-size: 12px; font-weight: 500; letter-spacing: 3px;
+    color: var(--glow-purple); margin-top: 4px;
+  }
+  .splash-status { font-size: 12px; color: #AAA; margin-top: 28px; font-weight: 300; }
+  .splash-progress {
+    width: 100%; height: 6px; border-radius: 3px;
+    background: rgba(255,255,255,0.06);
+    margin-top: 16px; overflow: hidden;
+    position: relative;
+  }
+  .splash-progress-fill {
+    height: 100%; width: 65%; border-radius: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dim), var(--secondary));
+    position: relative;
+    overflow: hidden;
+  }
+  .splash-shimmer {
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    animation: shimmer 1.8s linear infinite;
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(300%); }
+  }
+  .splash-enter {
+    margin-top: 20px;
+    background: transparent; border: none;
+    color: var(--secondary); font-size: 14px; font-weight: 600;
+    letter-spacing: 2px; cursor: pointer;
+    padding: 10px 48px;
+    text-transform: uppercase;
+    transition: opacity 0.2s;
+  }
+  .splash-enter:hover { opacity: 0.8; }
+  .splash-footer {
+    position: absolute; bottom: 24px;
+    font-size: 9px; color: var(--glow-purple); opacity: 0.4;
+    letter-spacing: 2px;
+  }
+
+  /* ── Sparkle particles ── */
+  .sparkles { position: absolute; inset: 0; pointer-events: none; }
+  .sparkle {
+    position: absolute;
+    width: 4px; height: 4px; border-radius: 50%;
+    animation: sparkle 2s ease-in-out infinite;
+  }
+  .sparkle:nth-child(1) { top: 20%; left: 30%; background: var(--primary); animation-delay: 0s; }
+  .sparkle:nth-child(2) { top: 35%; left: 70%; background: var(--secondary); animation-delay: 0.4s; }
+  .sparkle:nth-child(3) { top: 55%; left: 25%; background: var(--tertiary); animation-delay: 0.8s; }
+  .sparkle:nth-child(4) { top: 60%; left: 75%; background: var(--glow-purple); animation-delay: 1.2s; }
+  .sparkle:nth-child(5) { top: 40%; left: 50%; background: var(--primary); animation-delay: 1.6s; }
+  @keyframes sparkle {
+    0%, 100% { opacity: 0; transform: scale(0.5); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  /* ── Nav Drawer ── */
+  .drawer-mock {
+    width: 300px;
+    background: var(--surface);
+    border-radius: 0 20px 20px 0;
+    border-right: 1px solid var(--divider);
+    padding: 20px;
+  }
+  .drawer-header {
+    text-align: center; padding: 16px 0 20px;
+    border-bottom: 1px solid var(--divider);
+    margin-bottom: 16px;
+  }
+  .drawer-header .brand { font-size: 14px; font-weight: 700; color: var(--primary); letter-spacing: 1px; }
+  .drawer-header .sub {
+    font-size: 9px; font-weight: 800; letter-spacing: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-top: 2px;
+  }
+  .drawer-glow-line {
+    height: 1px;
+    background: linear-gradient(90deg, var(--primary), transparent);
+    margin-top: 2px;
+  }
+  .drawer-section { font-size: 10px; color: var(--primary); letter-spacing: 1.5px; margin: 12px 0 6px 12px; font-weight: 600; text-transform: uppercase; }
+  .drawer-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 8px; margin-bottom: 2px;
+    font-size: 13px; color: var(--on-surface-variant);
+    position: relative;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .drawer-item:hover { background: rgba(217,70,239,0.06); }
+  .drawer-item.active { color: var(--primary); font-weight: 600; background: rgba(217,70,239,0.08); }
+  .drawer-item.active::before {
+    content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px;
+    border-radius: 0 2px 2px 0;
+    background: linear-gradient(180deg, var(--primary), var(--secondary));
+  }
+  .drawer-item svg { width: 18px; height: 18px; opacity: 0.7; }
+  .drawer-item.active svg { opacity: 1; }
+
+  /* ── Container Card ── */
+  .container-card {
+    background: var(--surface);
+    border-radius: var(--card-radius);
+    border: 1px solid var(--divider);
+    padding: 14px;
+    display: flex; align-items: center; gap: 12px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .container-accent {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+    background: var(--primary);
+    border-radius: 0 2px 2px 0;
+  }
+  .container-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--surface-variant);
+    display: flex; align-items: center; justify-content: center;
+    margin-left: 4px;
+  }
+  .container-icon svg { width: 20px; height: 20px; }
+  .container-info { flex: 1; }
+  .container-name { font-size: 14px; font-weight: 600; color: var(--on-surface); }
+  .container-meta { font-size: 11px; color: var(--on-surface-variant); margin-top: 2px; }
+  .container-badges { display: flex; gap: 4px; margin-top: 4px; }
+  .badge-dx {
+    display: inline-flex; align-items: center;
+    padding: 1px 6px; border-radius: 3px;
+    font-size: 8px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase;
+  }
+  .badge-dx.vegas { background: rgba(217,70,239,0.15); color: var(--primary); }
+  .badge-dx.box64 { background: rgba(251,191,36,0.12); color: var(--tertiary); }
+
+  /* ── Shortcuts Grid ── */
+  .shortcut-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    max-width: 320px;
+  }
+  .shortcut-card {
+    background: var(--surface);
+    border-radius: 10px;
+    border: 1px solid var(--divider);
+    padding: 14px 10px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer; transition: transform 0.15s;
+  }
+  .shortcut-card:hover { transform: translateY(-2px); }
+  .shortcut-vegas-badge {
+    position: absolute; top: 0; right: 0;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    padding: 2px 6px 2px 8px;
+    border-radius: 0 10px 0 6px;
+    font-size: 7px; font-weight: 800; letter-spacing: 0.5px;
+    color: #0D0015;
+  }
+  .shortcut-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--surface-variant);
+    margin: 0 auto 6px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .shortcut-icon svg { width: 18px; height: 18px; opacity: 0.8; }
+  .shortcut-name { font-size: 10px; color: var(--on-surface-variant); }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .component-grid { grid-template-columns: 1fr; }
+    .preset-grid { grid-template-columns: repeat(4, 1fr); }
+    .splash-mock { width: 100%; height: auto; min-height: 500px; border-radius: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- HERO                                        -->
+  <!-- ════════════════════════════════════════════ -->
+  <div style="text-align:center;padding:48px 0 32px">
+    <div style="width:80px;height:70px;margin:0 auto 16px">
+      <svg viewBox="0 0 100 90" fill="none">
+        <defs>
+          <linearGradient id="vgrad" x1="0" y1="0" x2="100" y2="90">
+            <stop offset="0%" stop-color="#D946EF"/>
+            <stop offset="100%" stop-color="#22D3EE"/>
+          </linearGradient>
+        </defs>
+        <path d="M15 12 L50 78 L85 12" stroke="url(#vgrad)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <circle cx="50" cy="78" r="5" fill="#22D3EE"/>
+      </svg>
+    </div>
+    <h1><span class="gradient-text">VEGAS</span></h1>
+    <p style="color:var(--glow-purple);font-size:13px;letter-spacing:3px;font-weight:500;margin-top:4px">STAR EMULATOR</p>
+    <p style="color:var(--on-surface-variant);font-size:12px;margin-top:12px;max-width:520px;margin-left:auto;margin-right:auto">
+      Cyberpunk-neon UI design system for the Star Emulator Android app.
+      Brand identity distinct from GameHub — no blue accents, no bottom tabs.
+    </p>
+    <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <span class="badge badge-installed">VEGAS Primary #D946EF</span>
+      <span class="badge badge-recommended">Secondary #22D3EE</span>
+      <span class="badge badge-latest">Tertiary #FBBF24</span>
+      <span class="badge badge-recommended" style="background:rgba(192,132,252,0.12);color:#C084FC">Glow #C084FC</span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION: Brand Colors                       -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>Brand Palette</h2>
+    <div class="color-grid">
+      <div class="swatch">
+        <div class="swatch-circle" style="background:#D946EF"></div>
+        <div class="swatch-label">Primary</div>
+        <div class="swatch-hex">#D946EF</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-circle" style="background:#C026D3"></div>
+        <div class="swatch-label">Primary Variant</div>
+        <div class="swatch-hex">#C026D3</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-circle" style="background:#701A75"></div>
+        <div class="swatch-label">Primary Dim</div>
+        <div class="swatch-hex">#701A75</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-circle" style="background:#22D3EE"></div>
+        <div class="swatch-label">Secondary (Cyan)</div>
+        <div class="swatch-hex">#22D3EE</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-circle" style="background:#FBBF24"></div>
+        <div class="swatch-label">Tertiary (Gold)</div>
+        <div class="swatch-hex">#FBBF24</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-circle" style="background:#C084FC"></div>
+        <div class="swatch-label">Glow Purple</div>
+        <div class="swatch-hex">#C084FC</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-circle" style="background:#0D0015"></div>
+        <div class="swatch-label">Background</div>
+        <div class="swatch-hex">#0D0015</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-circle" style="background:#1A0A2E"></div>
+        <div class="swatch-label">Surface</div>
+        <div class="swatch-hex">#1A0A2E</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-circle" style="background:#2A1540"></div>
+        <div class="swatch-label">Surface Variant</div>
+        <div class="swatch-hex">#2A1540</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-circle" style="background:#E8E8E8"></div>
+        <div class="swatch-label">On Surface</div>
+        <div class="swatch-hex">#E8E8E8</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-circle" style="background:#AAAAAA"></div>
+        <div class="swatch-label">On Surface Variant</div>
+        <div class="swatch-hex">#AAAAAA</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-circle" style="background:#3A1A5E"></div>
+        <div class="swatch-label">Divider</div>
+        <div class="swatch-hex">#3A1A5E</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-circle" style="background:#5A2A7E"></div>
+        <div class="swatch-label">Outline</div>
+        <div class="swatch-hex">#5A2A7E</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-circle" style="background:#0E7490"></div>
+        <div class="swatch-label">Secondary Dim</div>
+        <div class="swatch-hex">#0E7490</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION: Splash Screen                      -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>Splash Screen</h2>
+    <div style="display:flex;justify-content:center">
+      <div class="splash-mock">
+        <div class="splash-glow"></div>
+        <div class="sparkles">
+          <div class="sparkle"></div>
+          <div class="sparkle"></div>
+          <div class="sparkle"></div>
+          <div class="sparkle"></div>
+          <div class="sparkle"></div>
+        </div>
+
+        <div class="splash-logo-area">
+          <svg viewBox="0 0 100 90" fill="none" style="width:90px;height:80px">
+            <defs>
+              <linearGradient id="vgrad2" x1="0" y1="0" x2="100" y2="90">
+                <stop offset="0%" stop-color="#D946EF"/>
+                <stop offset="50%" stop-color="#7C3AED"/>
+                <stop offset="100%" stop-color="#22D3EE"/>
+              </linearGradient>
+            </defs>
+            <path d="M15 12 L50 78 L85 12" stroke="url(#vgrad2)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <circle cx="50" cy="78" r="6" fill="#22D3EE"/>
+          </svg>
+        </div>
+
+        <div class="splash-wordmark gradient-text">VEGAS</div>
+        <div class="splash-subtitle">STAR EMULATOR</div>
+        <div class="splash-status">Loading graphics pipeline...</div>
+
+        <div class="splash-progress">
+          <div class="splash-progress-fill">
+            <div class="splash-shimmer"></div>
+          </div>
+        </div>
+
+        <button class="splash-enter">ENTER</button>
+        <div class="splash-footer">POWERED BY VEGAS</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:12px">
+      <p style="font-size:11px;color:var(--on-surface-variant)">
+        Animated "V" logo with breathing + glow pulse · Sparkle particles (magenta, cyan, gold, lavender)<br>
+        Gradient progress bar with shimmer sweep · "ENTER" button in cyan · Footer "POWERED BY VEGAS"
+      </p>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION: About Dialog                       -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>About Dialog</h2>
+    <div style="display:flex;justify-content:center">
+      <div class="dialog-mock">
+        <div class="dialog-header-strip"></div>
+        <div class="dialog-body dialog-centered">
+          <div class="dialog-v-logo">
+            <svg viewBox="0 0 64 55" fill="none">
+              <defs>
+                <linearGradient id="vgrad3" x1="0" y1="0" x2="64" y2="55">
+                  <stop offset="0%" stop-color="#D946EF"/>
+                  <stop offset="100%" stop-color="#22D3EE"/>
+                </linearGradient>
+              </defs>
+              <path d="M10 8 L32 47 L54 8" stroke="url(#vgrad3)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <circle cx="32" cy="47" r="3" fill="#22D3EE"/>
+            </svg>
+          </div>
+          <div class="dialog-title">STAR EMULATOR</div>
+          <div class="dialog-badge">POWERED BY VEGAS</div>
+          <div class="dialog-version">v1.3-vegas</div>
+
+          <div class="dialog-line"></div>
+
+          <div class="dialog-section-title" style="text-align:left">Powered By</div>
+          <div style="text-align:left">
+            <div class="dialog-credits"><span class="name">Wine</span><span class="desc">Windows compatibility layer</span></div>
+            <div class="dialog-credits"><span class="name">Box64</span><span class="desc">x86_64 emulation on ARM</span></div>
+            <div class="dialog-credits"><span class="name">VEGAS</span><span class="desc">D3D9/11 → Vulkan translation</span></div>
+          </div>
+
+          <div class="dialog-line"></div>
+
+          <div class="dialog-section-title" style="text-align:left">Credits</div>
+          <div style="text-align:left">
+            <div class="dialog-credits"><span class="name">brunodev85</span><span class="desc">Winlator</span></div>
+            <div class="dialog-credits"><span class="name">The412Banner</span><span class="desc">Star-Compose</span></div>
+            <div class="dialog-credits"><span class="name">VEGAS Team</span><span class="desc">DXVK fork for Android</span></div>
+          </div>
+
+          <div style="margin-top:12px">
+            <button class="btn btn-close" style="width:100%">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION: Theme Presets                      -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>Theme Presets — Appearance Screen</h2>
+    <div style="display:flex;justify-content:center">
+      <div class="preset-grid">
+        <!-- Classic Dark -->
+        <div class="preset-swatch">
+          <div class="preset-box" style="background:#1A1A1A;border:1px solid #404040">
+            <div class="preset-ui">
+              <div class="bar bar-full" style="background:#2A2A2A"></div>
+              <div class="bar bar-accent" style="background:#8B6BE0"></div>
+              <div class="bar bar-sub" style="background:#333"></div>
+              <div class="bar bar-sub2" style="background:#333"></div>
+            </div>
+          </div>
+          <div class="preset-name">Classic Dark</div>
+        </div>
+        <!-- AMOLED -->
+        <div class="preset-swatch">
+          <div class="preset-box" style="background:#000;border:1px solid #333">
+            <div class="preset-ui">
+              <div class="bar bar-full" style="background:#0D0D0D"></div>
+              <div class="bar bar-accent" style="background:#BB86FC"></div>
+              <div class="bar bar-sub" style="background:#181818"></div>
+              <div class="bar bar-sub2" style="background:#181818"></div>
+            </div>
+          </div>
+          <div class="preset-name">AMOLED</div>
+        </div>
+        <!-- VEGAS (selected) -->
+        <div class="preset-swatch">
+          <div class="preset-box vegas-highlight selected" style="background:#0D0015">
+            <div class="vegas-v-badge">V</div>
+            <div class="preset-ui">
+              <div class="bar bar-full" style="background:#1A0A2E"></div>
+              <div class="bar bar-accent" style="background:#D946EF"></div>
+              <div class="bar bar-sub" style="background:#2A1540"></div>
+              <div class="bar bar-sub2" style="background:#2A1540"></div>
+            </div>
+            <div class="preset-overlay">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+            </div>
+          </div>
+          <div class="preset-name selected">VEGAS</div>
+        </div>
+        <!-- Custom -->
+        <div class="preset-swatch">
+          <div class="preset-box" style="background:#121212;border:1px solid #404040">
+            <div class="preset-ui">
+              <div class="bar bar-full" style="background:#1E1E1E"></div>
+              <div class="bar bar-accent" style="background:#8B6BE0"></div>
+              <div class="bar bar-sub" style="background:#2A2A2A"></div>
+              <div class="bar bar-sub2" style="background:#2A2A2A"></div>
+            </div>
+          </div>
+          <div class="preset-name">Custom</div>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:16px">
+      <p style="font-size:11px;color:var(--on-surface-variant)">
+        VEGAS preset gets gradient border (magenta → cyan) when selected + "V" badge on swatch
+      </p>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION: Download Cards                     -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>Content Download Sheet</h2>
+    <h3>Per-Type Items with Left Accent Bar</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px;max-width:720px">
+
+      <!-- Wine -->
+      <div class="accent-card">
+        <div class="accent-bar cyan"></div>
+        <div class="accent-icon" style="color:var(--secondary)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
+          </svg>
+        </div>
+        <div class="accent-content">
+          <div class="accent-title">wine-9.0</div>
+          <div class="accent-sub">Installed</div>
+        </div>
+        <div class="accent-action">
+          <span class="badge badge-installed">installed</span>
+          <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px">Info</button>
+          <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;color:#EF5350;border-color:rgba(239,83,80,0.3)">Delete</button>
+        </div>
+      </div>
+
+      <!-- DXVK -->
+      <div class="accent-card">
+        <div class="accent-bar lavender"></div>
+        <div class="accent-icon" style="color:var(--glow-purple)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
+          </svg>
+        </div>
+        <div class="accent-content">
+          <div class="accent-title">dxvk-2.3.1</div>
+          <div class="accent-sub">Code 1</div>
+        </div>
+        <div class="accent-action">
+          <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px">Info</button>
+          <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;color:#EF5350;border-color:rgba(239,83,80,0.3)">Delete</button>
+        </div>
+      </div>
+
+      <!-- VEGAS (installed) -->
+      <div class="accent-card">
+        <div class="accent-bar magenta"></div>
+        <div class="accent-icon" style="color:var(--primary)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </div>
+        <div class="accent-content">
+          <div class="accent-title">vegas-2.7.3</div>
+          <div class="accent-sub" style="color:var(--tertiary)">Installed</div>
+        </div>
+        <div class="accent-action">
+          <span class="badge badge-installed">installed</span>
+          <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px">Info</button>
+        </div>
+      </div>
+
+      <!-- Box64 -->
+      <div class="accent-card">
+        <div class="accent-bar" style="background:var(--on-surface-variant)"></div>
+        <div class="accent-icon" style="color:var(--on-surface-variant)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+        </div>
+        <div class="accent-content">
+          <div class="accent-title">box64-0.2.8</div>
+          <div class="accent-sub">Code 3 · 2.6 MB</div>
+        </div>
+        <div class="accent-action">
+          <button class="btn btn-primary" style="padding:6px 14px;font-size:11px">Download</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION: VEGAS Release Cards                -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>VEGAS Download Manager</h2>
+    <div style="max-width:500px">
+      <!-- Featured / Latest -->
+      <div class="card" style="margin-bottom:10px;border:1px solid var(--divider)">
+        <div style="padding:14px;display:flex;align-items:center;gap:12px">
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <span style="font-size:14px;font-weight:600;color:var(--on-surface)">VEGAS 2.8.0</span>
+              <span class="badge badge-latest">LATEST</span>
+              <span class="badge badge-recommended">RECOMMENDED</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+              <span style="font-size:11px;color:var(--on-surface-variant)">v2.8.0</span>
+              <span style="width:3px;height:3px;border-radius:50%;background:var(--on-surface-variant);opacity:0.4"></span>
+              <span style="font-size:11px;color:var(--glow-purple)">VEGAS Wrapper</span>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="padding:8px 14px;font-size:12px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download
+          </button>
+        </div>
+        <!-- Glow underline -->
+        <div style="height:1px;margin:0 14px;background:linear-gradient(90deg,rgba(217,70,239,0.3),rgba(192,132,252,0.3),transparent)"></div>
+      </div>
+
+      <!-- Installed release -->
+      <div class="card" style="margin-bottom:10px">
+        <div style="padding:14px;display:flex;align-items:center;gap:12px">
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <span style="font-size:14px;font-weight:600;color:var(--on-surface)">VEGAS 2.7.3</span>
+              <span class="badge badge-installed">INSTALLED</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+              <span style="font-size:11px;color:var(--on-surface-variant)">v2.7.3</span>
+              <span style="width:3px;height:3px;border-radius:50%;background:var(--on-surface-variant);opacity:0.4"></span>
+              <span style="font-size:11px;color:var(--glow-purple)">VEGAS Wrapper</span>
+            </div>
+          </div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" style="width:28px;height:28px;opacity:0.5">
+            <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Downloadable older -->
+      <div class="card">
+        <div style="padding:14px;display:flex;align-items:center;gap:12px">
+          <div style="flex:1">
+            <span style="font-size:14px;font-weight:600;color:var(--on-surface)">VEGAS 2.6.1</span>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+              <span style="font-size:11px;color:var(--on-surface-variant)">v2.6.1</span>
+              <span style="width:3px;height:3px;border-radius:50%;background:var(--on-surface-variant);opacity:0.4"></span>
+              <span style="font-size:11px;color:var(--glow-purple)">VEGAS Wrapper</span>
+            </div>
+          </div>
+          <button class="btn btn-ghost" style="padding:6px 10px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION: Container Cards                    -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>Container Library Cards</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;max-width:680px">
+      <!-- VEGAS container -->
+      <div class="container-card">
+        <div class="container-accent" style="background:var(--primary)"></div>
+        <div class="container-icon" style="color:var(--primary)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <div class="container-info">
+          <div class="container-name">My Game Container</div>
+          <div class="container-meta">Wine 9.0 · 4.2 GB</div>
+          <div class="container-badges">
+            <span class="badge-dx vegas">VEGAS 2.7.3</span>
+            <span class="badge-dx box64">Box64 0.2.8</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Non-VEGAS container -->
+      <div class="container-card">
+        <div class="container-accent" style="background:var(--on-surface-variant)"></div>
+        <div class="container-icon" style="color:var(--on-surface-variant)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <div class="container-info">
+          <div class="container-name">Legacy Winlator</div>
+          <div class="container-meta">Wine 8.0 · 3.1 GB</div>
+          <div class="container-badges">
+            <span class="badge-dx vegas" style="background:rgba(100,100,100,0.15);color:var(--on-surface-variant)">DXVK 2.2</span>
+            <span class="badge-dx box64">Box64 0.2.6</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION: Shortcuts Grid                     -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>Shortcut Icons — Grid View</h2>
+    <div style="display:flex;justify-content:center">
+      <div class="shortcut-grid">
+        <div class="shortcut-card">
+          <div class="shortcut-vegas-badge">VEGAS</div>
+          <div class="shortcut-icon" style="color:var(--glow-purple)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div class="shortcut-name">Cyberpunk 2077</div>
+        </div>
+        <div class="shortcut-card">
+          <div class="shortcut-icon" style="color:var(--on-surface-variant)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </div>
+          <div class="shortcut-name">Steam</div>
+        </div>
+        <div class="shortcut-card">
+          <div class="shortcut-vegas-badge">VEGAS</div>
+          <div class="shortcut-icon" style="color:var(--primary)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div class="shortcut-name">Starfield</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION: Navigation Drawer                  -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>Navigation Drawer</h2>
+    <div style="display:flex;justify-content:center">
+      <div class="drawer-mock">
+        <div class="drawer-header">
+          <div class="brand">&#9733; STAR EMULATOR</div>
+          <div class="sub">POWERED BY VEGAS</div>
+          <div class="drawer-glow-line"></div>
+        </div>
+
+        <div class="drawer-section">Main</div>
+        <div class="drawer-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><grid width="8" height="8" x="3" y="3"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Shortcuts
+        </div>
+        <div class="drawer-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Containers
+        </div>
+
+        <div class="drawer-section">System</div>
+        <div class="drawer-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </div>
+        <div class="drawer-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+          Appearance
+        </div>
+        <div class="drawer-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          About
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION: XServer Drawer HUD                 -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>XServer Drawer (In-Game HUD) — Theme-Aware</h2>
+    <div style="max-width:360px">
+      <div style="background:var(--surface);border-radius:var(--card-radius);border:1px solid var(--divider);overflow:hidden">
+        <div style="padding:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <span style="font-size:13px;font-weight:600;color:var(--on-surface)">&#9881; Settings</span>
+            <div style="display:flex;gap:4px">
+              <span style="width:32px;height:16px;border-radius:8px;background:var(--primary);opacity:0.3;display:inline-block"></span>
+              <span style="width:32px;height:16px;border-radius:8px;background:var(--primary);display:inline-block"></span>
+            </div>
+          </div>
+
+          <div style="background:var(--surface-variant);border-radius:8px;padding:10px;margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;font-size:12px">
+              <span style="color:var(--on-surface-variant)">Performance Mode</span>
+              <span style="color:var(--primary);font-weight:600">VEGAS</span>
+            </div>
+            <div style="height:4px;background:var(--divider);border-radius:2px;margin-top:6px;overflow:hidden">
+              <div style="width:100%;height:100%;background:linear-gradient(90deg,var(--secondary),var(--primary));border-radius:2px"></div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
+            <div style="background:var(--surface-variant);border-radius:6px;padding:8px">
+              <div style="color:var(--on-surface-variant)">FPS</div>
+              <div style="color:var(--secondary);font-weight:700;font-size:16px">58</div>
+            </div>
+            <div style="background:var(--surface-variant);border-radius:6px;padding:8px">
+              <div style="color:var(--on-surface-variant)">GPU</div>
+              <div style="color:var(--primary);font-weight:700;font-size:14px">65%</div>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:11px">
+            <span style="color:var(--on-surface-variant)">Wrapper</span>
+            <span style="color:var(--glow-purple);font-weight:600">VEGAS 2.7.3</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION: Gradient Signature                 -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>VEGAS Gradient Signature</h2>
+    <div style="display:flex;gap:20px;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px">
+        <h3>Primary → Secondary (Horizontal)</h3>
+        <div style="height:24px;border-radius:8px;background:linear-gradient(90deg,#D946EF,#22D3EE);margin-bottom:12px"></div>
+        <h3>Primary → PurpleDeep → Secondary (Splash)</h3>
+        <div style="height:24px;border-radius:8px;background:linear-gradient(90deg,#D946EF,#7C3AED,#22D3EE);margin-bottom:12px"></div>
+        <h3>Magenta → GlowPurple → Cyan (Card underglow)</h3>
+        <div style="height:24px;border-radius:8px;background:linear-gradient(90deg,rgba(217,70,239,0.3),rgba(192,132,252,0.3),transparent)"></div>
+      </div>
+      <div style="flex:1;min-width:240px">
+        <h3>Primary → Transparent (Divider glow)</h3>
+        <div style="height:24px;border-radius:8px;background:linear-gradient(90deg,rgba(217,70,239,0.6),transparent);margin-bottom:12px"></div>
+        <h3>Primary Dim → Surface (Vertical header fade)</h3>
+        <div style="height:24px;border-radius:8px;background:linear-gradient(180deg,rgba(112,26,117,0.25),#1A0A2E);margin-bottom:12px"></div>
+        <h3>Primary → Secondary (Diagonal)</h3>
+        <div style="height:24px;border-radius:8px;background:linear-gradient(135deg,#D946EF,#22D3EE)"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION: Typography System                  -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>Typography</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+      <div>
+        <p style="font-size:36px;font-weight:900;letter-spacing:6px" class="gradient-text">VEGAS</p>
+        <p style="font-size:11px;color:var(--on-surface-variant)">Wordmark · 36sp Black · 6sp letter-spacing · gradient fill</p>
+      </div>
+      <div>
+        <p style="font-size:18px;font-weight:700;letter-spacing:3px;color:var(--primary)">CONTENT DOWNLOADS</p>
+        <p style="font-size:11px;color:var(--on-surface-variant)">Section headers · 18sp Bold · 3sp letter-spacing · Primary color</p>
+      </div>
+      <div>
+        <p style="font-size:13px;font-weight:500;letter-spacing:3px;color:var(--glow-purple)">STAR EMULATOR</p>
+        <p style="font-size:11px;color:var(--on-surface-variant)">Subtitle · 13sp Medium · 3sp letter-spacing · GlowPurple</p>
+      </div>
+      <div>
+        <p style="font-size:9px;font-weight:800;letter-spacing:1px;color:var(--primary);background:var(--primary);color:#0D0015;display:inline-block;padding:3px 10px;border-radius:4px;">POWERED BY VEGAS</p>
+        <p style="font-size:11px;color:var(--on-surface-variant);margin-top:4px">Badge · 9sp Black · 1sp letter-spacing · Primary bg, deep plum text</p>
+      </div>
+      <div>
+        <p style="font-size:12px;font-weight:600;color:var(--primary);letter-spacing:1px">SECTION TITLE</p>
+        <p style="font-size:11px;color:var(--on-surface-variant)">About section headers · 12sp SemiBold · Primary · 1sp letter-spacing</p>
+      </div>
+      <div>
+        <p style="font-size:10px;color:var(--primary);letter-spacing:1.5px;font-weight:600;text-transform:uppercase">Main</p>
+        <p style="font-size:11px;color:var(--on-surface-variant)">Drawer section headers · 10sp · uppercase · Primary</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION: Badge Variants                     -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>Badge Variants</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <span class="badge badge-latest">LATEST</span>
+      <span class="badge badge-recommended">RECOMMENDED</span>
+      <span class="badge badge-installed">INSTALLED</span>
+      <span class="badge badge-latest" style="background:rgba(192,132,252,0.12);color:#C084FC">VEGAS</span>
+      <span class="badge badge-recommended" style="background:rgba(34,211,238,0.12);color:#22D3EE">DXVK</span>
+      <span class="badge badge-latest" style="background:rgba(251,191,36,0.12);color:#FBBF24">Box64</span>
+      <div style="background:linear-gradient(135deg,var(--primary),var(--secondary));padding:2px 8px;border-radius:4px;font-size:8px;font-weight:800;letter-spacing:0.5px;color:#0D0015">VEGAS</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION: Installing Overlay                 -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>Installing Overlay</h2>
+    <div style="max-width:280px">
+      <div style="background:var(--surface);border-radius:16px;border:1px solid var(--divider);padding:36px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.4)">
+        <div style="width:40px;height:40px;margin:0 auto 20px;border:3px solid var(--tertiary);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+        <p style="font-size:14px;font-weight:600;color:var(--on-surface)">Installing VEGAS…</p>
+        <p style="font-size:12px;color:var(--on-surface-variant);margin-top:4px">Extracting wrapper assets</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION: Buttons                            -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="section">
+    <h2>Buttons</h2>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-primary">Download</button>
+      <button class="btn btn-ghost">Info</button>
+      <button class="btn btn-ghost" style="color:#EF5350;border-color:rgba(239,83,80,0.3)">Remove</button>
+      <button class="btn btn-close">Close</button>
+      <button class="btn btn-primary" style="padding:8px 14px;font-size:11px">Small Download</button>
+      <button class="splash-enter" style="position:static;display:inline-block;padding:10px 48px">ENTER</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- FOOTER                                      -->
+  <!-- ════════════════════════════════════════════ -->
+  <div style="text-align:center;padding:40px 0;border-top:1px solid var(--divider);margin-top:40px">
+    <p style="font-size:10px;color:var(--on-surface-variant);letter-spacing:2px">
+      <span class="gradient-text" style="font-weight:700">VEGAS</span> UI DESIGN SYSTEM · STAR EMULATOR
+    </p>
+    <p style="font-size:9px;color:var(--on-surface-variant);opacity:0.5;margin-top:4px">
+      Components live-coded in Kotlin/Compose · Rendered in HTML for preview
+    </p>
+  </div>
+
+</div>
+
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</body>
+</html>

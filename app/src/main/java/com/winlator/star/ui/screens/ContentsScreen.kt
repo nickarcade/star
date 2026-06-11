@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -31,6 +32,7 @@ import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Surface
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -57,6 +59,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.preference.PreferenceManager
@@ -65,9 +68,13 @@ import com.winlator.star.container.ContainerManager
 import com.winlator.star.contents.ContentProfile
 import com.winlator.star.contents.ContentsManager
 import com.winlator.star.ui.theme.Divider as DividerColor
+import com.winlator.star.ui.theme.GlowPurple
 import com.winlator.star.ui.theme.OnSurface
 import com.winlator.star.ui.theme.OnSurfaceVariant
-import com.winlator.star.ui.theme.Surface
+import com.winlator.star.ui.theme.Primary
+import com.winlator.star.ui.theme.Secondary
+import com.winlator.star.ui.theme.Tertiary
+import com.winlator.star.ui.theme.Surface as ThemeSurface
 import com.winlator.star.ui.theme.SurfaceVariant
 import java.util.concurrent.Executors
 
@@ -143,7 +150,7 @@ fun ContentsScreen(vm: ContentsViewModel = viewModel()) {
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
-                .background(Surface)
+                .background(ThemeSurface)
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -255,7 +262,7 @@ fun ContentsScreen(vm: ContentsViewModel = viewModel()) {
                 .background(Color.Black.copy(alpha = 0.6f)),
             contentAlignment = Alignment.Center,
         ) {
-            androidx.compose.material3.Surface(
+            Surface(
                 color = Color(0xFF2A2A2A),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.padding(32.dp),
@@ -479,14 +486,14 @@ private fun SectionBox(
 
 @Composable
 private fun InfoRow(label: String, value: String) {
-    Row(modifier = Modifier.padding(vertical = 2.dp)) {
-        Text("$label: ", color = Color(0xFFAAAAAA), style = MaterialTheme.typography.bodySmall)
-        Text(value,      color = Color(0xFFE0E0E0), style = MaterialTheme.typography.bodySmall)
+    Row(modifier = Modifier.padding(vertical = 3.dp)) {
+        Text("$label: ", color = OnSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Text(value,      color = OnSurface, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
     }
 }
 
 // ---------------------------------------------------------------------------
-// Content list item
+// Content list item — VEGAS styled card
 // ---------------------------------------------------------------------------
 @Composable
 private fun ContentItem(
@@ -498,54 +505,88 @@ private fun ContentItem(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     val isLocal = profile.remoteUrl == null
+    val type = profile.type
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Surface)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+    val accentColor = when {
+        type == ContentProfile.ContentType.CONTENT_TYPE_VEGAS -> Primary
+        type == ContentProfile.ContentType.CONTENT_TYPE_WINE -> Secondary
+        type == ContentProfile.ContentType.CONTENT_TYPE_DXVK -> GlowPurple
+        else -> OnSurfaceVariant
+    }
+
+    Surface(
+        color = ThemeSurface,
+        shape = RoundedCornerShape(14.dp),
+        tonalElevation = 2.dp,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
     ) {
-        Icon(
-            imageVector = Icons.Filled.Settings,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(36.dp),
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 8.dp),
+        ) {
+            // Left accent bar
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(52.dp)
+                    .background(accentColor)
+            )
+            Spacer(Modifier.width(10.dp))
+            // Content type icon
+            Icon(
+                imageVector = typeIcon(type),
+                contentDescription = null,
+                tint = accentColor,
+                modifier = Modifier.size(28.dp),
+            )
+            Spacer(Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    profile.verName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = OnSurface,
+                )
+                Text(
+                    "Code: ${profile.verCode}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = OnSurfaceVariant,
+                )
+            }
 
-        Column(modifier = Modifier
-            .weight(1f)
-            .padding(horizontal = 12.dp)) {
-            Text("Version: ${profile.verName}", style = MaterialTheme.typography.bodyLarge, color = OnSurface)
-            Text("Code: ${profile.verCode}",    style = MaterialTheme.typography.bodySmall, color = OnSurfaceVariant)
-        }
-
-        if (!isLocal) {
-            if (isDownloading) {
-                CircularProgressIndicator(modifier = Modifier.size(28.dp), color = MaterialTheme.colorScheme.primary, strokeWidth = 3.dp)
-            } else {
-                IconButton(onClick = onDownload) {
-                    Icon(Icons.Filled.Download, contentDescription = "Download", tint = MaterialTheme.colorScheme.primary)
+            if (!isLocal) {
+                if (isDownloading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Tertiary,
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    IconButton(onClick = onDownload) {
+                        Icon(Icons.Filled.Download, contentDescription = "Download", tint = Primary)
+                    }
                 }
             }
-        }
 
-        if (isLocal) {
-            Box {
-                IconButton(onClick = { menuExpanded = true }) {
-                    Icon(Icons.Filled.MoreVert, contentDescription = "Options", tint = OnSurfaceVariant)
-                }
-                DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-                    DropdownMenuItem(
-                        text = { Text("Info") },
-                        leadingIcon = { Icon(Icons.Filled.Info, null) },
-                        onClick = { menuExpanded = false; onInfo() },
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Remove") },
-                        leadingIcon = { Icon(Icons.Filled.Delete, null) },
-                        onClick = { menuExpanded = false; onRemove() },
-                    )
+            if (isLocal) {
+                Box {
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(Icons.Filled.MoreVert, contentDescription = "Options", tint = OnSurfaceVariant)
+                    }
+                    DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                        DropdownMenuItem(
+                            text = { Text("Info") },
+                            leadingIcon = { Icon(Icons.Filled.Info, null) },
+                            onClick = { menuExpanded = false; onInfo() },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Remove") },
+                            leadingIcon = { Icon(Icons.Filled.Delete, null) },
+                            onClick = { menuExpanded = false; onRemove() },
+                        )
+                    }
                 }
             }
         }

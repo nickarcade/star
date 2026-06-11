@@ -71,13 +71,6 @@ import com.winlator.star.ui.theme.PrimaryDim
 import com.winlator.star.ui.theme.WinlatorTheme
 import kotlinx.coroutines.delay
 
-private val PureBlack = Color(0xFF000000)
-private val DarkSurface = Color(0xFF0D0D0D)
-private val DimWhite = Color(0xFFE8E8E8)
-private val MutedWhite = Color(0xFF999999)
-private val ToggleTrackOff = Color(0xFF333333)
-private val ToggleThumbOff = Color(0xFF666666)
-
 fun setupComposeView(view: ComposeView) {
     view.setContent {
         WinlatorTheme {
@@ -97,7 +90,7 @@ fun XServerDrawer() {
         modifier = Modifier
             .fillMaxHeight()
             .width(380.dp)
-            .background(PureBlack)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -105,7 +98,11 @@ fun XServerDrawer() {
                 .fillMaxHeight()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(PureBlack, DarkSurface, PureBlack),
+                        colors = listOf(
+                            MaterialTheme.colorScheme.background,
+                            MaterialTheme.colorScheme.surface,
+                            MaterialTheme.colorScheme.background
+                        ),
                         startY = 0f,
                         endY = Float.POSITIVE_INFINITY
                     )
@@ -188,8 +185,8 @@ private fun TabIconButton(iconRes: Int, isSelected: Boolean, onClick: () -> Unit
     else
         Brush.verticalGradient(listOf(Color.Transparent, Color.Transparent))
 
-    val borderColor = if (isSelected) GlowPurple.copy(alpha = 0.6f) else Color(0xFF333333)
-    val tintColor = if (isSelected) Color.White else MutedWhite
+    val borderColor = if (isSelected) GlowPurple.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outline
+    val tintColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
 
     Box(
         modifier = Modifier
@@ -227,8 +224,8 @@ private fun FpsTabButton(isSelected: Boolean, onClick: () -> Unit) {
     else
         Brush.verticalGradient(listOf(Color.Transparent, Color.Transparent))
 
-    val borderColor = if (isSelected) GlowPurple.copy(alpha = 0.6f) else Color(0xFF333333)
-    val textColor = if (isSelected) Color.White else Primary
+    val borderColor = if (isSelected) GlowPurple.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outline
+    val textColor = if (isSelected) Color.White else MaterialTheme.colorScheme.primary
 
     Box(
         modifier = Modifier
@@ -267,7 +264,7 @@ private fun SectionHeader(title: String) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold),
-            color = DimWhite,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Spacer(Modifier.height(4.dp))
         Box(
@@ -291,14 +288,14 @@ private fun ToggleRow(label: String, checked: Boolean, onCheckedChange: (Boolean
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(DarkSurface)
+            .background(MaterialTheme.colorScheme.surface)
             .clickable { onCheckedChange(!checked) }
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = DimWhite,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
         )
         Switch(
@@ -306,9 +303,9 @@ private fun ToggleRow(label: String, checked: Boolean, onCheckedChange: (Boolean
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = GlowPurple,
-                checkedTrackColor = PrimaryDim,
-                uncheckedThumbColor = ToggleThumbOff,
-                uncheckedTrackColor = ToggleTrackOff,
+                checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.40f),
+                uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
             )
         )
     }
@@ -335,12 +332,12 @@ private fun LabeledSlider(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodySmall,
-                color = DimWhite,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = format(value),
                 style = MaterialTheme.typography.bodySmall,
-                color = Primary,
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -352,8 +349,8 @@ private fun LabeledSlider(
             steps = steps,
             colors = SliderDefaults.colors(
                 thumbColor = GlowPurple,
-                activeTrackColor = Primary,
-                inactiveTrackColor = ToggleTrackOff,
+                activeTrackColor = MaterialTheme.colorScheme.primary,
+                inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
                 activeTickColor = Color.Transparent,
                 inactiveTickColor = Color.Transparent,
             ),
@@ -397,21 +394,21 @@ private fun GraphicsContent(state: XServerDrawerState) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(DarkSurface)
+            .background(MaterialTheme.colorScheme.surface)
             .clickable { state.onToggleFullscreen?.run(); state.onClose?.run() }
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
-        Text("Toggle Fullscreen", color = DimWhite, modifier = Modifier.weight(1f))
+        Text("Toggle Fullscreen", color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
         Icon(
             painter = painterResource(R.drawable.icon_fullscreen),
             contentDescription = null,
-            tint = Primary,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(20.dp)
         )
     }
 
     Spacer(Modifier.height(4.dp))
-    HorizontalDivider(color = Color(0xFF1A1A1A), modifier = Modifier.padding(vertical = 6.dp))
+    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.padding(vertical = 6.dp))
 
     // FSR section
     val initFsrEnabled by XServerDialogState.fsrEnabled.collectAsState()
@@ -434,7 +431,7 @@ private fun GraphicsContent(state: XServerDrawerState) {
                 value = modeNames.getOrElse(fsrMode) { modeNames[0] },
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Mode", color = MutedWhite) },
+                label = { Text("Mode", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modeDropdownExpanded) },
                 modifier = Modifier.fillMaxWidth().menuAnchor(),
                 singleLine = true,
@@ -451,7 +448,7 @@ private fun GraphicsContent(state: XServerDrawerState) {
 
     ToggleRow("HDR", hdrEnabled) { hdrEnabled = it; pushFsrUpdate(fsrEnabled, fsrMode, fsrLevel, hdrEnabled) }
 
-    HorizontalDivider(color = Color(0xFF1A1A1A), modifier = Modifier.padding(vertical = 6.dp))
+    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.padding(vertical = 6.dp))
 
     Text("Screen Effects", color = Primary, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
     Spacer(Modifier.height(4.dp))
@@ -484,7 +481,7 @@ private fun GraphicsContent(state: XServerDrawerState) {
     SeShaderToggle("Toon", localToon) { localToon = it; applySe() }
     SeShaderToggle("NTSC", localNtsc) { localNtsc = it; applySe() }
 
-    HorizontalDivider(color = Color(0xFF1A1A1A), modifier = Modifier.padding(vertical = 6.dp))
+    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.padding(vertical = 6.dp))
 
     ToggleRow("Vegas FrameGen", lsfgEnabled) { state.onLsfgToggle?.run() }
 
@@ -516,7 +513,7 @@ private fun SeShaderToggle(label: String, checked: Boolean, onCheckedChange: (Bo
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(DarkSurface)
+            .background(MaterialTheme.colorScheme.surface)
             .clickable { onCheckedChange(!checked) }
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
@@ -525,12 +522,12 @@ private fun SeShaderToggle(label: String, checked: Boolean, onCheckedChange: (Bo
             onCheckedChange = onCheckedChange,
             colors = CheckboxDefaults.colors(
                 checkedColor = Primary,
-                uncheckedColor = ToggleThumbOff,
+                uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 checkmarkColor = Color.White
             )
         )
         Spacer(Modifier.width(4.dp))
-        Text(label, color = DimWhite, fontSize = 13.sp)
+        Text(label, color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp)
     }
 }
 
@@ -541,7 +538,7 @@ private fun LsfgInlineDropdown(label: String, options: List<String>, selectedOpt
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
         OutlinedTextField(
             value = selectedOption, onValueChange = {}, readOnly = true,
-            label = { Text(label, color = MutedWhite) },
+            label = { Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
             modifier = Modifier.menuAnchor().fillMaxWidth(),
             singleLine = true,
@@ -601,7 +598,7 @@ private fun HudContent(state: XServerDrawerState) {
     LabeledSlider("HUD Scale", scaleValue, 50f..200f, { scaleValue = it }, { state.onFpsConfigApply?.invoke(buildConfig()) }, format = { "${it.toInt()}%" })
     LabeledSlider("HUD Opacity", transValue, 0f..100f, { transValue = it }, { state.onFpsConfigApply?.invoke(buildConfig()) }, format = { "${it.toInt()}%" })
 
-    HorizontalDivider(color = Color(0xFF1A1A1A), modifier = Modifier.padding(vertical = 6.dp))
+    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.padding(vertical = 6.dp))
 
     ToggleRow("Show FPS", showFPS) { showFPS = !showFPS; state.onFpsConfigApply?.invoke(buildConfig()) }
     ToggleRow("Show CPU Load", showCPULoad) { showCPULoad = !showCPULoad; state.onFpsConfigApply?.invoke(buildConfig()) }
@@ -643,7 +640,7 @@ private fun ControlsContent(state: XServerDrawerState) {
         OutlinedTextField(
             value = allItems.getOrElse(selectedIdx) { "-- Disabled --" },
             onValueChange = {}, readOnly = true,
-            label = { Text("Profile", color = MutedWhite) },
+            label = { Text("Profile", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
             modifier = Modifier.fillMaxWidth().menuAnchor(),
             singleLine = true,
@@ -693,7 +690,7 @@ private fun ControlsContent(state: XServerDrawerState) {
         Unit
     }
 
-    HorizontalDivider(color = Color(0xFF1A1A1A), modifier = Modifier.padding(vertical = 6.dp))
+    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.padding(vertical = 6.dp))
 
     // Mouse & Cursor section
     Text("Mouse & Cursor", color = Primary, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
@@ -709,7 +706,7 @@ private fun ControlsContent(state: XServerDrawerState) {
         state.onDisableMouse?.run(); state.onClose?.run()
     }
 
-    HorizontalDivider(color = Color(0xFF1A1A1A), modifier = Modifier.padding(vertical = 6.dp))
+    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.padding(vertical = 6.dp))
 
     // Vibration section
     Text("Vibration", color = Primary, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
@@ -751,7 +748,7 @@ private fun AdvancedActionRow(label: String, iconRes: Int, onClick: () -> Unit) 
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(DarkSurface)
+            .background(MaterialTheme.colorScheme.surface)
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
@@ -762,7 +759,7 @@ private fun AdvancedActionRow(label: String, iconRes: Int, onClick: () -> Unit) 
             modifier = Modifier.size(20.dp),
         )
         Spacer(Modifier.width(10.dp))
-        Text(label, color = DimWhite, modifier = Modifier.weight(1f))
+        Text(label, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
     }
 }
 
@@ -792,7 +789,7 @@ private fun TmContent() {
 
     Text(
         text = "Processes: $count",
-        color = MutedWhite,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         fontSize = 12.sp,
     )
 
@@ -803,24 +800,24 @@ private fun TmContent() {
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(10.dp))
-                .background(DarkSurface)
+                .background(MaterialTheme.colorScheme.surface)
                 .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text("No processes", color = MutedWhite, fontSize = 13.sp)
+            Text("No processes", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
         }
     } else {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(10.dp))
-                .background(DarkSurface)
+                .background(MaterialTheme.colorScheme.surface)
                 .padding(4.dp)
         ) {
             processes.forEach { proc ->
                 TmProcessRow(proc)
                 if (proc != processes.last()) {
-                    HorizontalDivider(color = Color(0xFF1A1A1A), modifier = Modifier.padding(horizontal = 8.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.padding(horizontal = 8.dp))
                 }
             }
         }
@@ -835,11 +832,11 @@ private fun TmContent() {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(DarkSurface)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(10.dp)
     ) {
         cpuCores.forEach { core ->
-            Text(core, color = MutedWhite, fontSize = 11.sp, modifier = Modifier.padding(vertical = 1.dp))
+            Text(core, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp, modifier = Modifier.padding(vertical = 1.dp))
         }
     }
 
@@ -852,10 +849,10 @@ private fun TmContent() {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(DarkSurface)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(10.dp)
     ) {
-        Text(memInfo, color = MutedWhite, fontSize = 11.sp)
+        Text(memInfo, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
     }
 
     Spacer(Modifier.height(10.dp))
@@ -868,7 +865,7 @@ private fun TmContent() {
             }
         ) { Text("New Task\u2026", color = Primary) }
         Spacer(Modifier.weight(1f))
-        TextButton(onClick = { XServerDialogState.onTmDismissed?.run() }) { Text("Clear", color = MutedWhite) }
+        TextButton(onClick = { XServerDialogState.onTmDismissed?.run() }) { Text("Clear", color = MaterialTheme.colorScheme.onSurfaceVariant) }
     }
 }
 
@@ -904,21 +901,21 @@ private fun TmProcessRow(proc: XServerDialogState.TmProcess) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = proc.name + if (proc.wow64) " *32" else "",
-                color = DimWhite,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 12.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = "PID ${proc.pid}  \u2022  ${proc.formattedMemory}",
-                color = MutedWhite,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 10.sp,
             )
         }
 
         Box {
             IconButton(onClick = { menuExpanded = true }) {
-                Icon(Icons.Default.MoreVert, contentDescription = "Options", tint = MutedWhite)
+                Icon(Icons.Default.MoreVert, contentDescription = "Options", tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             DropdownMenu(
                 expanded = menuExpanded,

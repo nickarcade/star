@@ -958,13 +958,14 @@ internal fun SectionBox(
     Column(modifier = modifier) {
         Text(
             text = title,
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelMedium,
             color = accentColor,
             modifier = Modifier.padding(bottom = 4.dp)
         )
         Surface(
             shape = MaterialTheme.shapes.small,
-            border = androidx.compose.foundation.BorderStroke(1.dp, accentColor.copy(alpha = 0.4f)),
+            tonalElevation = 2.dp,
+            border = androidx.compose.foundation.BorderStroke(1.dp, accentColor.copy(alpha = 0.6f)),
             color = MaterialTheme.colorScheme.surfaceVariant,
             modifier = Modifier.fillMaxWidth()
         ) {

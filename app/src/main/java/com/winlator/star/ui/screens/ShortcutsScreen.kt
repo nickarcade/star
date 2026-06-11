@@ -130,6 +130,8 @@ import com.winlator.star.midi.MidiManager
 import com.winlator.star.ui.theme.Divider as DividerColor
 import com.winlator.star.ui.theme.OnSurface
 import com.winlator.star.ui.theme.OnSurfaceVariant
+import com.winlator.star.ui.theme.Primary
+import com.winlator.star.ui.theme.Secondary
 import com.winlator.star.ui.theme.Surface as SurfaceColor
 import com.winlator.star.widget.CPUListView
 import com.winlator.star.widget.EnvVarsView
@@ -512,6 +514,7 @@ private fun ShortcutItem(
         }.toMap()
         val dxvkVersion = cfgMap["version"] ?: ""
         val vkd3dVersion = cfgMap["vkd3dVersion"] ?: ""
+        val isVegas = shortcut.container?.dxWrapper?.contains("vegas", ignoreCase = true) == true
         Column(
             horizontalAlignment = Alignment.End,
             modifier = Modifier.padding(end = 4.dp),
@@ -520,12 +523,29 @@ private fun ShortcutItem(
             if (topLine.isNotEmpty()) {
                 Text(topLine, fontSize = 10.sp, color = OnSurfaceVariant, maxLines = 1)
             }
-            val bottomLine = listOfNotNull(
-                if (dxvkVersion.isNotEmpty()) "DXVK $dxvkVersion" else null,
-                if (vkd3dVersion.isNotEmpty()) "VKD3D $vkd3dVersion" else null,
-            ).joinToString(" · ")
-            if (bottomLine.isNotEmpty()) {
-                Text(bottomLine, fontSize = 10.sp, color = OnSurfaceVariant, maxLines = 1)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (isVegas) {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                Brush.linearGradient(listOf(Primary, Secondary)),
+                                RoundedCornerShape(3.dp)
+                            )
+                            .padding(horizontal = 4.dp, vertical = 1.dp),
+                    ) {
+                        Text("VEGAS", fontSize = 8.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp, color = Color.White)
+                    }
+                }
+                val bottomLine = listOfNotNull(
+                    if (dxvkVersion.isNotEmpty()) "DXVK $dxvkVersion" else null,
+                    if (vkd3dVersion.isNotEmpty()) "VKD3D $vkd3dVersion" else null,
+                ).joinToString(" · ")
+                if (bottomLine.isNotEmpty()) {
+                    Text(bottomLine, fontSize = 10.sp, color = OnSurfaceVariant, maxLines = 1)
+                }
             }
         }
         Box {
@@ -582,10 +602,15 @@ private fun ShortcutGridItem(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
+    // Determine if VEGAS badge should show
+    val isVegas = remember(shortcut) {
+        shortcut.container?.dxWrapper?.contains("vegas", ignoreCase = true) == true
+    }
+
     Box(
         modifier = Modifier
             .aspectRatio(2f / 3f)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(10.dp))
             .background(SurfaceColor)
             .combinedClickable(onClick = onRun, onLongClick = { menuExpanded = true }),
     ) {
@@ -608,6 +633,33 @@ private fun ShortcutGridItem(
             )
         }
 
+        // VEGAS badge — top-right corner
+        if (isVegas) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(6.dp)
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(
+                                com.winlator.star.ui.theme.Primary,
+                                com.winlator.star.ui.theme.Secondary,
+                            )
+                        ),
+                        RoundedCornerShape(4.dp),
+                    )
+                    .padding(horizontal = 5.dp, vertical = 2.dp),
+            ) {
+                Text(
+                    text = "VEGAS",
+                    fontSize = 8.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.sp,
+                    color = Color.White,
+                )
+            }
+        }
+
         // Gradient scrim + name/container at the bottom
         Box(
             modifier = Modifier
@@ -615,7 +667,7 @@ private fun ShortcutGridItem(
                 .align(Alignment.BottomStart)
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.75f))
+                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.80f))
                     )
                 )
                 .padding(horizontal = 8.dp, vertical = 6.dp),
