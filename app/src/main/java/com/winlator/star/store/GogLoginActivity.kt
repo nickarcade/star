@@ -101,7 +101,7 @@ class GogLoginActivity : ComponentActivity() {
             val userId = frag.getQueryParameter("user_id")
 
             webViewRef?.loadData(
-                "<html><body style='background:#111;color:#ccc;font-family:sans-serif;" +
+                "<html><body style='background:#000;color:#ccc;font-family:sans-serif;" +
                 "font-size:20px;text-align:center;padding-top:40%'>" +
                 "Logging in to GOG...</body></html>",
                 "text/html", "UTF-8",

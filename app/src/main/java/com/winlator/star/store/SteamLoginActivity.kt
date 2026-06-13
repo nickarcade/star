@@ -285,7 +285,7 @@ private fun SteamGuardDialog(
                     Button(
                         onClick = { onSubmit(code.trim()) },
                         enabled = code.trim().isNotEmpty(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A3A5C)),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBB86FC)),
                     ) { Text("Submit", color = Color.White) }
                 }
             }
@@ -308,7 +308,7 @@ private fun SteamLoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1B1B1B))
+            .background(Color.Black)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 32.dp, vertical = 64.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -369,8 +369,8 @@ private fun SteamLoginScreen(
             onClick = onLoginClick,
             enabled = !isLoading,
             modifier = Modifier.fillMaxWidth().height(52.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A3A5C)),
-            shape = RoundedCornerShape(4.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBB86FC)),
+            shape = RoundedCornerShape(8.dp),
         ) { Text("Sign In", color = Color.White) }
         Spacer(Modifier.height(12.dp))
 

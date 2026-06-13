@@ -215,7 +215,7 @@ private fun QrLoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(androidx.compose.ui.graphics.Color(0xFF1B1B1B))
+            .background(androidx.compose.ui.graphics.Color.Black)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp, vertical = 48.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -281,9 +281,9 @@ private fun QrLoginScreen(
         if (showRetry) {
             Button(
                 onClick = onRetry,
-                colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFF1A3A5C)),
+                colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFFBB86FC)),
                 modifier = Modifier.fillMaxWidth().height(48.dp),
-                shape = RoundedCornerShape(4.dp),
+                shape = RoundedCornerShape(8.dp),
             ) { Text("Retry", color = androidx.compose.ui.graphics.Color.White) }
             Spacer(Modifier.height(8.dp))
         }
