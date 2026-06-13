@@ -113,6 +113,7 @@ class AmazonGamesActivity : ComponentActivity() {
                     statusText = statusText,
                     gamesVisible = gamesVisible,
                     refreshEnabled = refreshEnabled,
+                    downloadStates = downloadStates,
                     expandedProductId = expandedProductId,
                     onToggleExpansion = { game ->
                         expandedProductId = if (expandedProductId == game.productId) null
