@@ -1,3 +1,6 @@
+## Star is discontinued.
+- Star has been discontinued on the 18th June 2026. It is no longer mantained and the source code will remain forever here to pickup. Thanks for the amazing journey.
+
 <img src="20260418_134945.png" width="1500" height="500" alt="star" />  
 </p>
 
