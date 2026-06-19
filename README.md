@@ -1,6 +1,3 @@
-## Star is discontinued.
-- Star has been discontinued on the 18th June 2026. It is no longer mantained and the source code will remain forever here to pickup. Thanks for the amazing journey.
-
 <img src="20260418_134945.png" width="1500" height="500" alt="star" />  
 </p>
 
@@ -8,19 +5,19 @@
   <img src="https://img.shields.io/github/downloads/star-emu/star/total" alt="Total Downloads" width="150">
 </p>
 
-<h1 align="center"> star -
+<h1 align="center"> WinHub Marcescence -
 Windows applications and games on Android.</h1>
 
-**star** is an application that lets you play PC games on Android with the best performance possible. It lets you access your Steam, Amazon, GOG and Epic Games library on the go.
+**WinHub** is an application that lets you play PC games on Android with the best performance possible. It lets you access your Steam, Amazon, GOG and Epic Games library on the go.
 
 **Informations:**
-- **Package:** `com.winlator.star` (standard), `com.tencent.ig` (pubg), `com.ludashi.benchmark` (ludashi)
+- **Package:** `com.winhub.emu` (standard), `com.tencent.ig` (pubg), `com.ludashi.benchmark` (ludashi)
 
-- **Version:** `v1.4-marcescene` (build identifier `7.1.4x-cmod`, versionCode `20`)
+- **Version:** `codename-marcescene` (build identifier `7.1.4x-cmod`, versionCode `20`)
 
 - **Android SDK:** `compileSdk 34`, `targetSdk 28`, `minSdk 26` (Android 8.0+)
 
-- **Upstream lineage:** Winlator → cmod → Bionic Nightly → star Bionic**
+- **Upstream lineage:** Winlator → cmod → Bionic Nightly → star Marcescence → WinHub Marcescence
 
 ---
 
@@ -71,11 +68,6 @@ The Wine/translation stack this app bundles or downloads:
 - **VKD3D-Proton** — [Hans-Kristian Arntzen](https://github.com/HansKristian-Work)
 - **Turnip / Mesa** — [Freedreno team @ Mesa](https://gitlab.freedesktop.org/mesa/mesa)
 - **Proton layers (bionic)** — [GameNative](https://github.com/utkarshdalal/GameNative)
-
-Credits surfaced in the **star Bionic REVAMPED** project (`star.bionic-revamp`):
-
-- **@The412Banner** — Converting the UI to Jetpack Compose and rewriting the controller implementation.
-- **@jacojayy** — Timeline Semaphore patches in Turnip.
 
 If you have contributed and are not listed, open a PR — this list is intended to be complete.
 
