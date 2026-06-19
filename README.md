@@ -5,13 +5,13 @@
   <img src="https://img.shields.io/github/downloads/star-emu/star/total" alt="Total Downloads" width="150">
 </p>
 
-<h1 align="center"> WinHub Marcescence -
+<h1 align="center"> star Marcescence -
 Windows applications and games on Android.</h1>
 
-**WinHub** is an application that lets you play PC games on Android with the best performance possible. It lets you access your Steam, Amazon, GOG and Epic Games library on the go.
+**star** is an application that lets you play PC games on Android with the best performance possible. It lets you access your Steam, Amazon, GOG and Epic Games library on the go.
 
 **Informations:**
-- **Package:** `com.winhub.emu` (standard), `com.tencent.ig` (pubg), `com.ludashi.benchmark` (ludashi)
+- **Package:** `com.star.marcescence` (standard), `com.tencent.ig` (pubg), `com.ludashi.benchmark` (ludashi)
 
 - **Version:** `codename-marcescene` (build identifier `7.1.4x-cmod`, versionCode `20`)
 
