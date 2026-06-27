@@ -135,8 +135,20 @@ jobs:
       run: chmod +x build-lsfg-android.sh
     - name: Build LSFG native library
       run: ./build-lsfg-android.sh
-    - name: Build with Gradle
-      run: ./gradlew assembleDebug
+    - name: Fetch and prepare assets
+          run: |
+            git lfs install
+            git clone --depth 1 https://github.com/star-emu/contents.git
+  contents
+            mkdir -p app/src/main/assets
+            cp contents/proton-9.0-arm64ec.tar.zst
+  app/src/main/assets/proton-9.0-arm64ec.txz 2>/dev/null || true
+            cp contents/imagefs.tar.zst app/src/main/assets/imagefs.txz
+  2>/dev/null || true
+            touch app/src/main/assets/proton-9.0-x86_64.txz
+
+        - name: Build with Gradle
+          run: ./gradlew assembleDebug -x downloadProton -x downloadImageFS
 
     - name: Upload standard APK
       uses: actions/upload-artifact@v4
